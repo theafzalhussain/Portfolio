@@ -1,0 +1,45 @@
+import { GithubIcon, LinkedinIcon, TwitterIcon } from '@/components/portfolio/brand-icons'
+
+export function Footer() {
+  return (
+    <footer className="relative z-10 border-t border-border py-10">
+      <div className="mx-auto flex w-[min(72rem,calc(100%-2.5rem))] flex-col items-center justify-between gap-4 sm:flex-row">
+        <p className="font-mono text-sm text-muted-foreground">
+          {'<'}
+          <span className="text-primary">AH</span>
+          {' /> '}
+          &copy; {new Date().getFullYear()} Afzal Hussain. Crafted with care.
+        </p>
+        <div className="flex items-center gap-2">
+          <a
+            href="https://github.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub"
+            className="flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
+          >
+            <GithubIcon className="size-4" />
+          </a>
+          <a
+            href="https://linkedin.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="LinkedIn"
+            className="flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
+          >
+            <LinkedinIcon className="size-4" />
+          </a>
+          <a
+            href="https://twitter.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Twitter"
+            className="flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
+          >
+            <TwitterIcon className="size-4" />
+          </a>
+        </div>
+      </div>
+    </footer>
+  )
+}
