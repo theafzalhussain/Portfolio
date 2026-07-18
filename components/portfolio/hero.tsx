@@ -55,11 +55,11 @@ const orbitTech = [
 ]
 
 function TechOrb() {
-  const radii = ['7rem', '10.5rem', '14rem']
+  const radii = ['5rem', '7.5rem', '10rem']
   const durations = ['16s', '22s', '30s']
 
   return (
-    <div className="animate-float-y relative mx-auto flex size-[19rem] items-center justify-center sm:size-[24rem] lg:size-[30rem]">
+    <div className="animate-float-y relative mx-auto flex size-[18rem] items-center justify-center sm:size-[22rem] lg:size-[28rem]">
       {/* Orbit rings */}
       {radii.map((r, i) => (
         <div
@@ -71,9 +71,11 @@ function TechOrb() {
       ))}
 
       {/* Core */}
-      <div className="glass-strong relative z-10 flex size-28 flex-col items-center justify-center rounded-full shadow-[0_0_60px_-10px_var(--glow)] sm:size-36">
-        <span className="font-heading text-3xl font-bold text-primary sm:text-4xl">AH</span>
-        <span className="font-mono text-[10px] text-muted-foreground sm:text-xs">MERN Stack</span>
+      <div className="glass-strong relative z-10 flex size-20 flex-col items-center justify-center rounded-full shadow-[0_0_60px_-10px_var(--glow)] sm:size-28 lg:size-36">
+        <span className="font-heading text-2xl font-bold text-primary sm:text-3xl lg:text-4xl">
+          AH
+        </span>
+        <span className="font-mono text-[9px] text-muted-foreground sm:text-[10px] lg:text-xs">MERN Stack</span>
       </div>
 
       {/* Orbiting badges */}
@@ -194,7 +196,7 @@ export function Hero() {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.3 }}
-          className="hidden justify-center lg:flex"
+          className="mt-16 flex justify-center lg:mt-0"
         >
           <TechOrb />
         </motion.div>
