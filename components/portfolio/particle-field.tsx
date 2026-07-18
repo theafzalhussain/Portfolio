@@ -20,13 +20,17 @@ export function ParticleField() {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
+    // Hide the default cursor for a custom experience
+    document.body.style.cursor = 'none'
+
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     let width = 0
     let height = 0
     let particles: Particle[] = []
-    let raf = 0
+    let rafId = 0
     const mouse = { x: -9999, y: -9999 }
+    const cursor = { x: -9999, y: -9999 } // Lagging cursor for the glow effect
 
     const GAP = 90
     const INFLUENCE = 140
@@ -55,12 +59,28 @@ export function ParticleField() {
     function tick() {
       ctx!.clearRect(0, 0, width, height)
 
+      if (!reduceMotion) {
+        // Smoothly move the lagging cursor towards the real mouse position
+        cursor.x += (mouse.x - cursor.x) * 0.1
+        cursor.y += (mouse.y - cursor.y) * 0.1
+
+        // Draw a premium, glowing orb at the lagging cursor's position
+        const gradient = ctx!.createRadialGradient(cursor.x, cursor.y, 0, cursor.x, cursor.y, 24)
+        gradient.addColorStop(0, 'rgba(94, 234, 212, 0.25)') // teal-300
+        gradient.addColorStop(1, 'rgba(94, 234, 212, 0)')
+
+        ctx!.fillStyle = gradient
+        ctx!.beginPath()
+        ctx!.arc(cursor.x, cursor.y, 24, 0, Math.PI * 2)
+        ctx!.fill()
+      }
+
       for (const p of particles) {
         if (!reduceMotion) {
-          const dx = mouse.x - p.x
+          const dx = cursor.x - p.x // Interaction is now with the lagging cursor
           const dy = mouse.y - p.y
           const dist = Math.hypot(dx, dy)
-          if (dist < INFLUENCE && dist > 0.01) {
+          if (dist < INFLUENCE) {
             const force = (1 - dist / INFLUENCE) * 1.4
             p.vx -= (dx / dist) * force
             p.vy -= (dy / dist) * force
@@ -77,6 +97,14 @@ export function ParticleField() {
         ctx!.beginPath()
         ctx!.arc(p.x, p.y, 1.4, 0, Math.PI * 2)
         ctx!.fillStyle = 'rgba(125, 211, 252, 0.35)'
+        ctx!.fill()
+      }
+
+      if (!reduceMotion) {
+        // Draw a small dot for the actual cursor position for precision
+        ctx!.beginPath()
+        ctx!.arc(mouse.x, mouse.y, 2, 0, Math.PI * 2)
+        ctx!.fillStyle = 'rgba(125, 211, 252, 1)' // sky-300
         ctx!.fill()
       }
 
@@ -100,7 +128,7 @@ export function ParticleField() {
         }
       }
 
-      raf = requestAnimationFrame(tick)
+      rafId = requestAnimationFrame(tick)
     }
 
     function onMove(e: PointerEvent) {
@@ -120,10 +148,12 @@ export function ParticleField() {
     window.addEventListener('pointerleave', onLeave)
 
     return () => {
-      cancelAnimationFrame(raf)
+      cancelAnimationFrame(rafId)
       window.removeEventListener('resize', resize)
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerleave', onLeave)
+      // Restore default cursor on component unmount
+      document.body.style.cursor = ''
     }
   }, [])
 

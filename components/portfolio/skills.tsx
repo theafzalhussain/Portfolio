@@ -95,7 +95,10 @@ export function Skills() {
         </div>
 
         {/* Skill grid */}
-        <motion.div layout className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <motion.div
+          layout
+          className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-4"
+        >
           <AnimatePresence mode="popLayout">
             {visible.map((skill) => (
               <motion.div
