@@ -7,24 +7,24 @@ const highlights = [
   {
     icon: GraduationCap,
     title: 'Education',
-    desc: 'BCA from IGNOU — building a strong computer science foundation.',
+    desc: 'BCA from Maharishi Dayananda University, Haryana — with a 6-month Web Development course.',
   },
   {
     icon: Braces,
     title: 'Technical Skills',
-    desc: 'MERN stack — MongoDB, Express, React, Node.js, plus modern tooling.',
+    desc: 'HTML5, CSS3, JavaScript (ES6+), React.js, Bootstrap 5, plus Node.js, Express & MongoDB.',
   },
   {
     icon: Rocket,
     title: 'Projects',
-    desc: 'Real-world applications built with clean, production-grade code.',
+    desc: '4+ live web apps — MERN e-commerce, movie app, weather & countries explorer.',
   },
 ]
 
 export function Resume() {
   return (
-    <section id="resume" className="relative z-10 py-24">
-      <div className="mx-auto w-[min(72rem,calc(100%-2.5rem))]">
+    <section id="resume" className="relative z-10 py-16 md:py-24">
+      <div className="mx-auto w-[min(72rem,calc(100%-2rem))]">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -32,7 +32,6 @@ export function Resume() {
           transition={{ duration: 0.6 }}
           className="mb-14 flex flex-col items-center text-center"
         >
-          <p className="mb-3 font-mono text-sm text-primary">{'// resume'}</p>
           <h2 className="text-balance text-3xl font-bold tracking-tight md:text-4xl">
             My <span className="text-primary">Resume</span>
           </h2>
@@ -72,7 +71,7 @@ export function Resume() {
             together.
           </p>
 
-          <div className="relative mt-9 grid gap-4 text-left sm:grid-cols-3">
+          <div className="relative mt-9 grid grid-cols-1 gap-4 text-left sm:grid-cols-3">
             {highlights.map((item, i) => (
               <motion.div
                 key={item.title}
@@ -98,9 +97,6 @@ export function Resume() {
               <Download className="size-4 transition-transform group-hover:translate-y-0.5" />
               Download Full Resume
             </a>
-            <p className="font-mono text-xs text-muted-foreground">
-              {'// add resume.pdf to the public directory'}
-            </p>
           </div>
         </motion.div>
       </div>

@@ -49,8 +49,8 @@ const orbitTech = [
   { label: 'Express', color: 'text-foreground', ring: 0, delay: '-8s' },
   { label: 'React', color: 'text-cyan-400', ring: 1, delay: '0s' },
   { label: 'Node.js', color: 'text-emerald-400', ring: 1, delay: '-7.3s' },
-  { label: 'Next.js', color: 'text-foreground', ring: 1, delay: '-14.6s' },
-  { label: 'TypeScript', color: 'text-sky-400', ring: 2, delay: '0s' },
+  { label: 'JavaScript', color: 'text-yellow-400', ring: 1, delay: '-14.6s' },
+  { label: 'HTML & CSS', color: 'text-orange-400', ring: 2, delay: '0s' },
   { label: 'Tailwind', color: 'text-cyan-300', ring: 2, delay: '-13s' },
 ]
 
@@ -102,8 +102,8 @@ function TechOrb() {
 
 export function Hero() {
   return (
-    <section id="top" className="relative z-10 flex min-h-screen items-center pt-28 pb-16">
-      <div className="mx-auto grid w-[min(72rem,calc(100%-2.5rem))] items-center gap-14 lg:grid-cols-2">
+    <section id="top" className="relative z-10 flex min-h-screen items-center pt-24 pb-16 sm:pt-28">
+      <div className="mx-auto grid w-[min(72rem,calc(100%-2rem))] items-center gap-10 sm:gap-14 lg:grid-cols-2">
         <div className="flex flex-col items-start gap-6">
           <motion.span
             initial={{ opacity: 0, y: 16 }}
@@ -126,7 +126,7 @@ export function Hero() {
           >
             Hi, I&apos;m <span className="text-primary">Afzal Hussain</span>
             <br />
-            Full-Stack MERN Developer
+            Web Developer
           </motion.h1>
 
           <motion.div
@@ -162,7 +162,7 @@ export function Hero() {
             </a>
             <div className="flex items-center gap-2">
               <a
-                href="https://github.com"
+                href="https://github.com/theafzalhussain"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="GitHub profile"
@@ -171,7 +171,7 @@ export function Hero() {
                 <GithubIcon className="size-5" />
               </a>
               <a
-                href="https://linkedin.com"
+                href="https://www.linkedin.com/in/afzalhussain"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="LinkedIn profile"
@@ -194,7 +194,7 @@ export function Hero() {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.3 }}
-          className="hidden justify-center sm:flex"
+          className="hidden justify-center lg:flex"
         >
           <TechOrb />
         </motion.div>
