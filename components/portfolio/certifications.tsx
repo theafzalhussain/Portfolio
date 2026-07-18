@@ -99,8 +99,8 @@ function CertCard({
 
 export function Certifications() {
   return (
-    <section id="certifications" className="relative z-10 py-24">
-      <div className="mx-auto w-[min(72rem,calc(100%-2.5rem))]">
+    <section id="certifications" className="relative z-10 py-16 md:py-24">
+      <div className="mx-auto w-[min(72rem,calc(100%-2rem))]">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -118,7 +118,7 @@ export function Certifications() {
           />
         </motion.div>
 
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {certifications.map((cert, i) => (
             <CertCard key={cert.title} cert={cert} index={i} />
           ))}
