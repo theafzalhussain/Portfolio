@@ -13,7 +13,12 @@ import {
   MessageSquare,
   Send,
 } from 'lucide-react'
-import { GithubIcon, LinkedinIcon } from '@/components/portfolio/brand-icons'
+import {
+  GithubIcon,
+  InstagramIcon,
+  LinkedinIcon,
+  WhatsappIcon,
+} from '@/components/portfolio/brand-icons'
 
 const EMAIL = 'theafzalhussain786@gmail.com'
 const MESSAGE_LIMIT = 1000
@@ -128,13 +133,13 @@ export function Contact() {
   return (
     <section id="contact" className="relative z-10 py-20 md:py-24">
       <div className="mx-auto w-[min(72rem,calc(100%-2rem))]">
-        <div className="glass-strong grid gap-10 rounded-3xl p-6 sm:p-8 md:grid-cols-2 md:p-12">
+        <div className="glass-strong grid grid-cols-1 gap-10 rounded-3xl p-6 sm:p-8 md:grid-cols-2 md:p-12">
           <motion.div
             initial={{ opacity: 0, x: -24 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: '-80px' }}
             transition={{ duration: 0.6 }}
-            className="flex flex-col justify-center"
+            className="flex min-w-0 flex-col justify-center"
           >
             <span className="mb-4 inline-flex w-fit items-center gap-2 rounded-full border border-primary/25 bg-primary/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-primary">
               <MessageSquare className="size-3.5" aria-hidden="true" />
@@ -197,9 +202,9 @@ export function Contact() {
 
             <div className="mt-8 md:mt-10">
               <p className="mb-3 text-sm text-muted-foreground">Connect with me</p>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <a
-                  href="https://github.com"
+                  href="https://github.com/theafzalhussain"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="GitHub profile"
@@ -208,13 +213,31 @@ export function Contact() {
                   <GithubIcon className="size-5" />
                 </a>
                 <a
-                  href="https://linkedin.com"
+                  href="https://www.linkedin.com/in/afzalhussain"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="LinkedIn profile"
                   className="glass flex size-11 items-center justify-center rounded-xl text-muted-foreground transition-all hover:-translate-y-1 hover:text-primary"
                 >
                   <LinkedinIcon className="size-5" />
+                </a>
+                <a
+                  href="https://wa.me/918447859784"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="WhatsApp"
+                  className="glass flex size-11 items-center justify-center rounded-xl text-muted-foreground transition-all hover:-translate-y-1 hover:text-primary"
+                >
+                  <WhatsappIcon className="size-5" />
+                </a>
+                <a
+                  href="https://www.instagram.com/theafzalhussain"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram profile"
+                  className="glass flex size-11 items-center justify-center rounded-xl text-muted-foreground transition-all hover:-translate-y-1 hover:text-primary"
+                >
+                  <InstagramIcon className="size-5" />
                 </a>
               </div>
             </div>
@@ -226,7 +249,7 @@ export function Contact() {
             viewport={{ once: true, margin: '-80px' }}
             transition={{ duration: 0.6, delay: 0.1 }}
             onSubmit={handleSubmit}
-            className="flex flex-col gap-4"
+            className="flex min-w-0 flex-col gap-4"
           >
             <div className="grid gap-4 sm:grid-cols-2">
               <FloatingField id="name" label="Your Name" value={name} onChange={setName} />

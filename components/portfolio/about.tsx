@@ -98,16 +98,15 @@ function ProfileCard() {
 
 export function About() {
   return (
-    <section id="about" className="relative z-10 py-24">
-      <div className="mx-auto w-[min(72rem,calc(100%-2.5rem))]">
+    <section id="about" className="relative z-10 py-16 md:py-24">
+      <div className="mx-auto w-[min(72rem,calc(100%-2rem))]">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.6 }}
-          className="mb-16 max-w-2xl"
+          className="mb-10 max-w-2xl md:mb-16"
         >
-          <p className="mb-3 font-mono text-sm text-primary">{'// about me'}</p>
           <h2 className="text-balance text-3xl font-bold tracking-tight md:text-4xl">
             About <span className="text-primary">Me</span>
           </h2>
@@ -117,7 +116,7 @@ export function About() {
           />
         </motion.div>
 
-        <div className="grid items-center gap-16 lg:grid-cols-2 lg:gap-12">
+        <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-12">
           <motion.div
             initial={{ opacity: 0, x: -24 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -132,7 +131,7 @@ export function About() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: '-80px' }}
             transition={{ duration: 0.6, delay: 0.15 }}
-            className="mt-8 lg:mt-0"
+            className="mt-8 min-w-0 lg:mt-0"
           >
             <p className="text-pretty leading-relaxed text-muted-foreground">
               I&apos;m an aspiring{' '}

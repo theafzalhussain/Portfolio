@@ -7,34 +7,64 @@ import { GithubIcon } from '@/components/portfolio/brand-icons'
 
 const projects = [
   {
-    title: 'NexCart',
+    title: 'eShopperr',
     subtitle: 'E-Commerce Platform',
     description:
-      'Full-featured MERN e-commerce app with Stripe payments, admin dashboard, real-time inventory, and advanced product filtering.',
-    tags: ['React', 'Node.js', 'MongoDB', 'Stripe'],
-    image: '/images/project-ecommerce.png',
+      'A full-featured MERN stack e-commerce website built with the help of AI and GitHub Copilot. Includes product catalog, cart, and a complete shopping experience.',
+    tags: ['React', 'Node.js', 'Express', 'MongoDB Atlas'],
+    image: '/images/project-eshopperr.png',
+    liveUrl: 'https://eshopperr.me',
+    sourceUrl: 'https://github.com/theafzalhussain',
     featured: true,
-    highlights: ['Secure Stripe checkout', 'Admin analytics dashboard', 'Real-time inventory'],
+    highlights: ['Full MERN stack architecture', 'Built with AI & GitHub Copilot', 'Responsive shopping experience'],
   },
   {
-    title: 'TaskFlow',
-    subtitle: 'Team Collaboration',
+    title: 'MovieZone',
+    subtitle: 'Movie Discovery App',
     description:
-      'Real-time project management tool with drag-and-drop kanban boards, live cursors, and WebSocket-powered notifications.',
-    tags: ['Next.js', 'Express', 'Socket.io', 'PostgreSQL'],
-    image: '/images/project-taskflow.png',
+      'A movie browsing web app that fetches real-time movie data from the TMDB API — explore trending, popular, and upcoming films with search.',
+    tags: ['React', 'Tailwind CSS', 'JavaScript', 'TMDB API'],
+    image: '/images/project-moviezone.png',
+    liveUrl: 'https://moviezone.dev',
+    sourceUrl: 'https://github.com/theafzalhussain',
     featured: false,
-    highlights: ['Drag-and-drop kanban', 'Live team presence'],
+    highlights: ['Live TMDB API integration', 'Search & filter movies'],
   },
   {
-    title: 'DevMetrics',
-    subtitle: 'Analytics Dashboard',
+    title: 'Weather App',
+    subtitle: 'Real-Time Weather',
     description:
-      'Developer analytics platform aggregating GitHub activity, deployments, and performance metrics into beautiful visualizations.',
-    tags: ['React', 'TypeScript', 'Recharts', 'Redis'],
+      'A responsive weather dashboard integrating the OpenWeather API with geolocation to auto-detect location and search 200,000+ cities.',
+    tags: ['HTML', 'CSS', 'JavaScript', 'OpenWeather API'],
     image: '/images/project-analytics.png',
+    liveUrl: '#',
+    sourceUrl: 'https://github.com/theafzalhussain',
     featured: false,
-    highlights: ['GitHub integration', 'Interactive charts'],
+    highlights: ['Geolocation auto-detect', 'Dynamic weather icons'],
+  },
+  {
+    title: 'REST Countries Explorer',
+    subtitle: 'Country Explorer',
+    description:
+      'An interactive explorer fetching data for 250+ countries with flags, demographics, and region details, plus real-time search and filters.',
+    tags: ['HTML', 'CSS', 'JavaScript', 'REST API'],
+    image: '/images/project-taskflow.png',
+    liveUrl: '#',
+    sourceUrl: 'https://github.com/theafzalhussain',
+    featured: false,
+    highlights: ['250+ countries data', 'Search & region filter'],
+  },
+  {
+    title: 'Portfolio Website',
+    subtitle: 'Personal Portfolio',
+    description:
+      'A fully responsive personal portfolio showcasing projects and skills with smooth UX and pixel-perfect layouts across all devices.',
+    tags: ['React', 'Tailwind CSS', 'Framer Motion'],
+    image: '/images/project-ecommerce.png',
+    liveUrl: '#',
+    sourceUrl: 'https://github.com/theafzalhussain',
+    featured: false,
+    highlights: ['Mobile-first design', 'Smooth animations'],
   },
 ]
 
@@ -117,14 +147,18 @@ function ProjectCard({
 
         <div className="mt-auto flex items-center gap-3 pt-2">
           <a
-            href="#"
+            href={project.liveUrl}
+            target={project.liveUrl.startsWith('http') ? '_blank' : undefined}
+            rel={project.liveUrl.startsWith('http') ? 'noopener noreferrer' : undefined}
             className="group/btn inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-all hover:scale-[1.03] hover:shadow-[0_0_28px_-6px_var(--glow)] active:scale-95"
           >
             Live Demo
             <ArrowUpRight className="size-4 transition-transform group-hover/btn:-translate-y-0.5 group-hover/btn:translate-x-0.5" />
           </a>
           <a
-            href="#"
+            href={project.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
             className="glass inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
           >
             <GithubIcon className="size-4" /> Source
@@ -163,7 +197,7 @@ export function Projects() {
 
         <div className="flex flex-col gap-8">
           <ProjectCard project={featured} index={0} featured />
-          <div className="grid gap-8 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
             {rest.map((project, i) => (
               <ProjectCard key={project.title} project={project} index={i + 1} />
             ))}

@@ -4,13 +4,14 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Atom,
-  Boxes,
-  Braces,
-  Container,
+  Bot,
+  Code2,
   Database,
   FileCode2,
+  FileJson,
   GitBranch,
   Layers,
+  Palette,
   Server,
   Wind,
   Workflow,
@@ -28,19 +29,19 @@ const skills: {
   glow: string
   text: string
 }[] = [
+  { name: 'HTML', icon: Code2, category: 'Frontend', glow: 'hover:shadow-[0_0_32px_-6px_#fb923c]', text: 'text-orange-400' },
+  { name: 'CSS', icon: Palette, category: 'Frontend', glow: 'hover:shadow-[0_0_32px_-6px_#60a5fa]', text: 'text-blue-400' },
+  { name: 'JavaScript', icon: FileJson, category: 'Frontend', glow: 'hover:shadow-[0_0_32px_-6px_#facc15]', text: 'text-yellow-400' },
   { name: 'React', icon: Atom, category: 'Frontend', glow: 'hover:shadow-[0_0_32px_-6px_#22d3ee]', text: 'text-cyan-400' },
   { name: 'Next.js', icon: Layers, category: 'Frontend', glow: 'hover:shadow-[0_0_32px_-6px_#e5e7eb]', text: 'text-foreground' },
-  { name: 'TypeScript', icon: Braces, category: 'Frontend', glow: 'hover:shadow-[0_0_32px_-6px_#38bdf8]', text: 'text-sky-400' },
   { name: 'Tailwind CSS', icon: Wind, category: 'Frontend', glow: 'hover:shadow-[0_0_32px_-6px_#67e8f9]', text: 'text-cyan-300' },
   { name: 'Framer Motion', icon: Zap, category: 'Frontend', glow: 'hover:shadow-[0_0_32px_-6px_#f472b6]', text: 'text-pink-400' },
   { name: 'Node.js', icon: Server, category: 'Backend', glow: 'hover:shadow-[0_0_32px_-6px_#4ade80]', text: 'text-green-400' },
   { name: 'Express', icon: Workflow, category: 'Backend', glow: 'hover:shadow-[0_0_32px_-6px_#e5e7eb]', text: 'text-foreground' },
   { name: 'REST APIs', icon: FileCode2, category: 'Backend', glow: 'hover:shadow-[0_0_32px_-6px_#fbbf24]', text: 'text-amber-400' },
-  { name: 'MongoDB', icon: Database, category: 'Databases/Tools', glow: 'hover:shadow-[0_0_32px_-6px_#34d399]', text: 'text-emerald-400' },
-  { name: 'PostgreSQL', icon: Database, category: 'Databases/Tools', glow: 'hover:shadow-[0_0_32px_-6px_#60a5fa]', text: 'text-blue-400' },
-  { name: 'Docker', icon: Container, category: 'Databases/Tools', glow: 'hover:shadow-[0_0_32px_-6px_#38bdf8]', text: 'text-sky-400' },
+  { name: 'MongoDB Atlas', icon: Database, category: 'Databases/Tools', glow: 'hover:shadow-[0_0_32px_-6px_#34d399]', text: 'text-emerald-400' },
+  { name: 'AI Tools', icon: Bot, category: 'Databases/Tools', glow: 'hover:shadow-[0_0_32px_-6px_#22d3ee]', text: 'text-cyan-400' },
   { name: 'Git / GitHub', icon: GitBranch, category: 'Databases/Tools', glow: 'hover:shadow-[0_0_32px_-6px_#fb923c]', text: 'text-orange-400' },
-  { name: 'Redux / Zustand', icon: Boxes, category: 'Frontend', glow: 'hover:shadow-[0_0_32px_-6px_#a5b4fc]', text: 'text-indigo-300' },
 ]
 
 export function Skills() {
@@ -49,8 +50,8 @@ export function Skills() {
   const visible = active === 'All' ? skills : skills.filter((s) => s.category === active)
 
   return (
-    <section id="skills" className="relative z-10 py-24">
-      <div className="mx-auto w-[min(72rem,calc(100%-2.5rem))]">
+    <section id="skills" className="relative z-10 py-16 md:py-24">
+      <div className="mx-auto w-[min(72rem,calc(100%-2rem))]">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}

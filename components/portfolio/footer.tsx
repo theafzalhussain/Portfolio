@@ -1,4 +1,9 @@
-import { GithubIcon, LinkedinIcon, TwitterIcon } from '@/components/portfolio/brand-icons'
+import {
+  GithubIcon,
+  InstagramIcon,
+  LinkedinIcon,
+  WhatsappIcon,
+} from '@/components/portfolio/brand-icons'
 
 export function Footer() {
   return (
@@ -12,7 +17,7 @@ export function Footer() {
         </p>
         <div className="flex items-center gap-2">
           <a
-            href="https://github.com"
+            href="https://github.com/theafzalhussain"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="GitHub"
@@ -21,7 +26,7 @@ export function Footer() {
             <GithubIcon className="size-4" />
           </a>
           <a
-            href="https://linkedin.com"
+            href="https://www.linkedin.com/in/afzalhussain"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="LinkedIn"
@@ -30,13 +35,22 @@ export function Footer() {
             <LinkedinIcon className="size-4" />
           </a>
           <a
-            href="https://twitter.com"
+            href="https://wa.me/918447859784"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Twitter"
+            aria-label="WhatsApp"
             className="flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
           >
-            <TwitterIcon className="size-4" />
+            <WhatsappIcon className="size-4" />
+          </a>
+          <a
+            href="https://www.instagram.com/theafzalhussain"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Instagram"
+            className="flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
+          >
+            <InstagramIcon className="size-4" />
           </a>
         </div>
       </div>
