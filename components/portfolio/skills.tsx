@@ -59,7 +59,7 @@ export function Skills() {
           transition={{ duration: 0.6 }}
           className="mb-10 max-w-2xl"
         >
-          <p className="mb-3 font-mono text-sm text-primary">{'// tech stack'}</p>
+        
           <h2 className="text-balance text-3xl font-bold tracking-tight md:text-4xl">
             Technical Expertise
           </h2>
