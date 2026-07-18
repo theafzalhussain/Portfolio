@@ -12,7 +12,7 @@ const projects = [
     description:
       'A full-featured MERN stack e-commerce website built with the help of AI and GitHub Copilot. Includes product catalog, cart, and a complete shopping experience.',
     tags: ['React', 'Node.js', 'Express', 'MongoDB Atlas'],
-    image: '/images/project-eshopperr.png',
+    image: '/images/eshopper.png',
     liveUrl: 'https://eshopperr.me',
     sourceUrl: 'https://github.com/theafzalhussain',
     featured: true,
@@ -24,7 +24,7 @@ const projects = [
     description:
       'A movie browsing web app that fetches real-time movie data from the TMDB API — explore trending, popular, and upcoming films with search.',
     tags: ['React', 'Tailwind CSS', 'JavaScript', 'TMDB API'],
-    image: '/images/project-moviezone.png',
+    image: '/images/moviezone.png',
     liveUrl: 'https://moviezone.dev',
     sourceUrl: 'https://github.com/theafzalhussain',
     featured: false,

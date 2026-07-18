@@ -33,7 +33,7 @@ const skills: {
   { name: 'CSS', icon: Palette, category: 'Frontend', glow: 'hover:shadow-[0_0_32px_-6px_#60a5fa]', text: 'text-blue-400' },
   { name: 'JavaScript', icon: FileJson, category: 'Frontend', glow: 'hover:shadow-[0_0_32px_-6px_#facc15]', text: 'text-yellow-400' },
   { name: 'React', icon: Atom, category: 'Frontend', glow: 'hover:shadow-[0_0_32px_-6px_#22d3ee]', text: 'text-cyan-400' },
-  { name: 'Next.js', icon: Layers, category: 'Frontend', glow: 'hover:shadow-[0_0_32px_-6px_#e5e7eb]', text: 'text-foreground' },
+  // { name: 'Next.js', icon: Layers, category: 'Frontend', glow: 'hover:shadow-[0_0_32px_-6px_#e5e7eb]', text: 'text-foreground' },
   { name: 'Tailwind CSS', icon: Wind, category: 'Frontend', glow: 'hover:shadow-[0_0_32px_-6px_#67e8f9]', text: 'text-cyan-300' },
   { name: 'Framer Motion', icon: Zap, category: 'Frontend', glow: 'hover:shadow-[0_0_32px_-6px_#f472b6]', text: 'text-pink-400' },
   { name: 'Node.js', icon: Server, category: 'Backend', glow: 'hover:shadow-[0_0_32px_-6px_#4ade80]', text: 'text-green-400' },
