@@ -31,6 +31,18 @@ const projects = [
     highlights: ['Live TMDB API integration', 'Search & filter movies'],
   },
   {
+    title: 'MyNews Web',
+    subtitle: 'News Discovery App',
+    description:
+      'A news discovery web app that fetches real-time news from the GNews API. Explore top headlines and search for news articles on various topics.',
+    tags: ['React', 'CSS', 'JavaScript', 'GNews API'],
+    image: '/images/news.png',
+    liveUrl: 'https://mynews-web.vercel.app/',
+    sourceUrl: 'https://github.com/theafzalhussain',
+    featured: false,
+    highlights: ['Live GNews API integration', 'Search for news articles', 'Responsive design'],
+  },
+  {
     title: 'Weather App',
     subtitle: 'Real-Time Weather',
     description:
@@ -54,18 +66,7 @@ const projects = [
     featured: false,
     highlights: ['250+ countries data', 'Search & region filter'],
   },
-  {
-    title: 'Portfolio Website',
-    subtitle: 'Personal Portfolio',
-    description:
-      'A fully responsive personal portfolio showcasing projects and skills with smooth UX and pixel-perfect layouts across all devices.',
-    tags: ['React', 'Tailwind CSS', 'Framer Motion'],
-    image: '/images/project-ecommerce.png',
-    liveUrl: '#',
-    sourceUrl: 'https://github.com/theafzalhussain',
-    featured: false,
-    highlights: ['Mobile-first design', 'Smooth animations'],
-  },
+
 ]
 
 function ProjectCard({
