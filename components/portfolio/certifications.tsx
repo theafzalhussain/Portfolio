@@ -26,6 +26,27 @@ const certifications = [
     tag: 'AI / Security',
     href: '#',
   },
+  {
+    icon: Award,
+    title: 'Front End web Development',
+    issuer: 'Mind Luster · 2023',
+    tag: 'Frontend',
+    href: '#',
+  },
+  {
+    icon: Award,
+    title: 'Employability, Life & Soft Skills',
+    issuer: 'World Class Skill Centre',
+    tag: 'Soft Skills',
+    href: '#',
+  },
+  {
+    icon: Award,
+    title: '100% Regularity & Punctuality',
+    issuer: 'World Class Skill Centre',
+    tag: 'Achievement',
+    href: '#',
+  },
 ]
 
 function CertCard({
