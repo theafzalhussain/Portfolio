@@ -72,7 +72,7 @@ function ProfileCard() {
 
         <div className="relative mt-6 flex flex-col items-center gap-1.5 pb-2 text-center">
           <h3 className="font-heading text-2xl font-bold">Afzal Hussain</h3>
-          <p className="font-mono text-sm text-primary">{'<MERN_Developer />'}</p>
+          <p className="font-mono text-sm text-primary"><b>{' Web_Developer '}</b></p>
         </div>
       </div>
 
