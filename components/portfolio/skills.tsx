@@ -61,7 +61,7 @@ export function Skills() {
         >
         
           <h2 className="text-balance text-3xl font-bold tracking-tight md:text-4xl">
-            Technical Expertise
+            Technical <span className="text-primary">Expertise</span>
           </h2>
           <p className="mt-4 leading-relaxed text-muted-foreground">
             Tools and technologies I use daily to ship robust, scalable products.

@@ -129,7 +129,6 @@ export function Certifications() {
           transition={{ duration: 0.6 }}
           className="mb-14 flex flex-col items-center text-center"
         >
-          <p className="mb-3 font-mono text-sm text-primary">{'// credentials'}</p>
           <h2 className="text-balance text-3xl font-bold tracking-tight md:text-4xl">
             Certifications & <span className="text-primary">Achievements</span>
           </h2>
