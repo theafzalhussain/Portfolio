@@ -62,7 +62,7 @@ function ProfileCard() {
 
         <div className="glass relative overflow-hidden rounded-2xl">
           <Image
-            src="/images/afzal-avatar.png"
+            src="/images/afzalavatar.png"
             alt="Illustration of Afzal Hussain, MERN stack developer"
             width={640}
             height={640}
