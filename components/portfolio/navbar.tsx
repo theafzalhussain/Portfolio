@@ -2,15 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion, useScroll, useSpring } from 'framer-motion'
-import { ArrowRight, Menu, X } from 'lucide-react'
+import { ArrowRight, Menu, Moon, Sun, X } from 'lucide-react'
+import { useTheme } from '@/components/theme-provider'
 
 const links = [
   { href: '#top', id: 'top', label: 'Home' },
   { href: '#about', id: 'about', label: 'About' },
   { href: '#skills', id: 'skills', label: 'Skills' },
+  { href: '#services', id: 'services', label: 'Services' },
+  { href: '#experience', id: 'experience', label: 'Experience' },
   { href: '#projects', id: 'projects', label: 'Projects' },
-  { href: '#resume', id: 'resume', label: 'Resume' },
-  { href: '#certifications', id: 'certifications', label: 'Certifications' },
   { href: '#contact', id: 'contact', label: 'Contact' },
 ]
 
@@ -20,6 +21,7 @@ export function Navbar() {
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState('top')
   const [scrolled, setScrolled] = useState(false)
+  const { theme, toggle } = useTheme()
 
   useEffect(() => {
     const sections = links
@@ -106,6 +108,15 @@ export function Navbar() {
         </ul>
 
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={toggle}
+            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+            className="glass flex size-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:text-primary"
+          >
+            {theme === 'dark' ? <Sun className="size-4" /> : <Moon className="size-4" />}
+          </button>
+
           <a
             href="#contact"
             className="group hidden items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-[0_0_24px_-6px_var(--glow)] transition-all hover:scale-[1.03] hover:shadow-[0_0_36px_-4px_var(--glow)] active:scale-95 lg:inline-flex"

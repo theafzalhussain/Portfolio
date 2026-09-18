@@ -23,9 +23,9 @@ function CountUp({ target, suffix }: { target: number; suffix: string }) {
 }
 
 const stats = [
-  { icon: Code2, target: 3, suffix: '+', label: 'Projects Built' },
-  { icon: Layers, target: 5, suffix: '+', label: 'Technologies' },
-  { icon: Sparkles, target: 1, suffix: '+', label: 'Year Learning' },
+  { icon: Code2, target: 5, suffix: '+', label: 'Projects Built' },
+  { icon: Layers, target: 15, suffix: '+', label: 'Technologies' },
+  { icon: Sparkles, target: 3, suffix: '+', label: 'Years Learning' },
 ]
 
 function ProfileCard() {

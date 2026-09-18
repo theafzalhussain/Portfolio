@@ -87,6 +87,7 @@ export function Contact() {
   const [email, setEmail] = useState('')
   const [subject, setSubject] = useState('')
   const [message, setMessage] = useState('')
+  const [website, setWebsite] = useState('') // honeypot — humans never fill this
   const [sending, setSending] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -110,7 +111,7 @@ export function Contact() {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, subject, message }),
+        body: JSON.stringify({ name, email, subject, message, website }),
       })
       const data = await res.json()
 
@@ -285,6 +286,21 @@ export function Contact() {
                 {message.length}/{MESSAGE_LIMIT}
               </p>
             </div>
+            {/* Honeypot field — hidden from humans, tempting for bots.
+                If it ever gets a value, the API route rejects the submission. */}
+            <div className="hidden" aria-hidden="true">
+              <label htmlFor="website">Website</label>
+              <input
+                id="website"
+                name="website"
+                type="text"
+                tabIndex={-1}
+                autoComplete="off"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+              />
+            </div>
+
             <button
               type="submit"
               disabled={sending}

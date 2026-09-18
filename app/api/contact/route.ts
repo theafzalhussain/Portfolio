@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { connectToDatabase } from '@/lib/mongodb'
 import { Contact } from '@/lib/models/Contact'
 import { sendContactEmails } from '@/lib/mail'
+import { isRateLimited } from '@/lib/rate-limit'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -12,6 +13,12 @@ export async function POST(request: Request) {
     const email = typeof body.email === 'string' ? body.email.trim() : ''
     const subject = typeof body.subject === 'string' ? body.subject.trim() : ''
     const message = typeof body.message === 'string' ? body.message.trim() : ''
+    const website = typeof body.website === 'string' ? body.website : ''
+
+    // Honeypot: bots fill every field, humans never see this one.
+    if (website) {
+      return NextResponse.json({ error: 'Submission rejected.' }, { status: 400 })
+    }
 
     if (!name || name.length < 2) {
       return NextResponse.json({ error: 'Please provide a valid name.' }, { status: 400 })
@@ -29,13 +36,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Input exceeds maximum length.' }, { status: 400 })
     }
 
-    // 1. Persist the submission to MongoDB Atlas.
-    await connectToDatabase()
-
     const ip =
       request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
       request.headers.get('x-real-ip') ||
       ''
+
+    // Best-effort rate limit (per IP, in-memory) to deter spam bursts.
+    if (isRateLimited(ip || 'unknown')) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait a minute and try again.' },
+        { status: 429 },
+      )
+    }
+
+    // 1. Persist the submission to MongoDB Atlas.
+    await connectToDatabase()
+
     const userAgent = request.headers.get('user-agent') || ''
 
     await Contact.create({ name, email, subject, message, ip, userAgent })
