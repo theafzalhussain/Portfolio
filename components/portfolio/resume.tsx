@@ -7,7 +7,7 @@ const highlights = [
   {
     icon: GraduationCap,
     title: 'Education',
-    desc: 'BCA from Maharishi Dayananda University, Haryana — with a 6-month Web Development course.',
+    desc: 'BCA from IGNOU — currently pursuing, alongside a 6-month professional Web Development course.',
   },
   {
     icon: Braces,

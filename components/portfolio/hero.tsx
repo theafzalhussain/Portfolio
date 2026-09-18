@@ -1,9 +1,20 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { motion } from 'framer-motion'
 import { ArrowRight, Mail } from 'lucide-react'
 import { GithubIcon, LinkedinIcon } from '@/components/portfolio/brand-icons'
+
+// The 3D scene touches WebGL, so it is loaded client-side only.
+const HeroScene = dynamic(() => import('@/components/three/hero-scene'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full w-full items-center justify-center">
+      <span className="size-24 animate-pulse rounded-full bg-primary/15 blur-sm" />
+    </div>
+  ),
+})
 
 const specializations = [
   'Building Scalable Web Apps',
@@ -54,29 +65,31 @@ const orbitTech = [
   { label: 'Tailwind', color: 'text-cyan-300', ring: 2, delay: '-13s' },
 ]
 
+/**
+ * The hero visual: a real WebGL scene (distorted metal core, wireframe
+ * 3D-architecture cage, orbiting rings, stars, grid floor) with the
+ * glassmorphic tech badges orbiting on top in crisp HTML.
+ */
 function TechOrb() {
   const radii = ['5rem', '7.5rem', '10rem']
   const durations = ['16s', '22s', '30s']
 
   return (
-    <div className="animate-float-y relative mx-auto flex size-[18rem] items-center justify-center sm:size-[22rem] lg:size-[28rem]">
+    <div className="animate-float-y relative mx-auto size-[18rem] sm:size-[22rem] lg:size-[28rem]">
+      {/* 3D scene */}
+      <div className="absolute inset-0" aria-hidden="true">
+        <HeroScene />
+      </div>
+
       {/* Orbit rings */}
       {radii.map((r, i) => (
         <div
           key={r}
           aria-hidden="true"
-          className="absolute rounded-full border border-primary/15"
+          className="pointer-events-none absolute rounded-full border border-primary/15"
           style={{ width: `calc(${r} * 2)`, height: `calc(${r} * 2)` }}
         />
       ))}
-
-      {/* Core */}
-      <div className="glass-strong relative z-10 flex size-20 flex-col items-center justify-center rounded-full shadow-[0_0_60px_-10px_var(--glow)] sm:size-28 lg:size-36">
-        <span className="font-heading text-2xl font-bold text-primary sm:text-3xl lg:text-4xl">
-          AH
-        </span>
-        <span className="font-mono text-[9px] text-muted-foreground sm:text-[10px] lg:text-xs">MERN Stack</span>
-      </div>
 
       {/* Orbiting badges */}
       {orbitTech.map((tech) => (

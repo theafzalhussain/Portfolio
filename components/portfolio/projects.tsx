@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { ArrowUpRight, FolderGit2, Sparkles } from 'lucide-react'
 import { GithubIcon } from '@/components/portfolio/brand-icons'
+import { TiltCard } from '@/components/ui/tilt-card'
 
 const projects = [
   {
@@ -79,15 +80,18 @@ function ProjectCard({
   featured?: boolean
 }) {
   return (
-    <motion.article
+    <motion.div
       initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-60px' }}
       transition={{ duration: 0.55, delay: index * 0.1 }}
-      className={`glass group relative flex flex-col overflow-hidden rounded-3xl transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_0_60px_-16px_var(--glow)] ${
-        featured ? 'md:flex-row' : ''
-      }`}
     >
+      <TiltCard
+        max={4}
+        className={`glass group flex h-full flex-col overflow-hidden rounded-3xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_60px_-16px_var(--glow)] ${
+          featured ? 'md:flex-row' : ''
+        }`}
+      >
       <div
         className={`relative overflow-hidden ${
           featured ? 'aspect-[16/10] md:aspect-auto md:w-[55%]' : 'aspect-[16/10]'
@@ -166,7 +170,8 @@ function ProjectCard({
           </a>
         </div>
       </div>
-    </motion.article>
+      </TiltCard>
+    </motion.div>
   )
 }
 
