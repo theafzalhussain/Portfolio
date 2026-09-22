@@ -1,323 +1,256 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
-import {
-  Check,
-  Clock,
-  Copy,
-  Loader2,
-  Mail as MailIcon,
-  MapPin,
-  MessageSquare,
-  Send,
-} from 'lucide-react'
+import { Check, Copy, Send } from 'lucide-react'
 import {
   GithubIcon,
   InstagramIcon,
   LinkedinIcon,
   WhatsappIcon,
 } from '@/components/portfolio/brand-icons'
+import { Reveal } from '@/components/ui/reveal'
 
 const EMAIL = 'theafzalhussain786@gmail.com'
-const MESSAGE_LIMIT = 1000
+const MAX_MESSAGE = 1000
 
-function FloatingField({
-  id,
-  label,
-  type = 'text',
-  textarea = false,
-  required = true,
-  value,
-  onChange,
-  maxLength,
-}: {
-  id: string
-  label: string
-  type?: string
-  textarea?: boolean
-  required?: boolean
-  value: string
-  onChange: (v: string) => void
-  maxLength?: number
-}) {
-  const shared =
-    'peer w-full rounded-xl border border-input bg-secondary/40 px-4 pt-6 pb-2 text-sm text-foreground outline-none transition-colors focus:border-primary placeholder-transparent'
+const CHANNELS = [
+  { label: 'Email', value: EMAIL, href: `mailto:${EMAIL}` },
+  { label: 'Phone / WhatsApp', value: '+91 84478 59784', href: 'https://wa.me/918447859784' },
+  {
+    label: 'GitHub',
+    value: 'github.com/theafzalhussain',
+    href: 'https://github.com/theafzalhussain',
+  },
+  {
+    label: 'LinkedIn',
+    value: 'linkedin.com/in/theafzalhussain',
+    href: 'https://www.linkedin.com/in/theafzalhussain/',
+  },
+]
 
-  return (
-    <div className="relative">
-      {textarea ? (
-        <textarea
-          id={id}
-          name={id}
-          rows={5}
-          required={required}
-          maxLength={maxLength}
-          placeholder={label}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className={`${shared} resize-none`}
-        />
-      ) : (
-        <input
-          id={id}
-          name={id}
-          type={type}
-          required={required}
-          maxLength={maxLength}
-          placeholder={label}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className={shared}
-        />
-      )}
-      <label
-        htmlFor={id}
-        className="pointer-events-none absolute left-4 top-2 text-xs text-primary transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-placeholder-shown:text-muted-foreground peer-focus:top-2 peer-focus:text-xs peer-focus:text-primary"
-      >
-        {label}
-      </label>
-    </div>
-  )
-}
+const SOCIALS = [
+  { Icon: GithubIcon, href: 'https://github.com/theafzalhussain', label: 'GitHub' },
+  {
+    Icon: LinkedinIcon,
+    href: 'https://www.linkedin.com/in/theafzalhussain/',
+    label: 'LinkedIn',
+  },
+  { Icon: WhatsappIcon, href: 'https://wa.me/918447859784', label: 'WhatsApp' },
+  {
+    Icon: InstagramIcon,
+    href: 'https://www.instagram.com/theafzal_hussain_786',
+    label: 'Instagram',
+  },
+]
 
 export function Contact() {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [subject, setSubject] = useState('')
-  const [message, setMessage] = useState('')
-  const [website, setWebsite] = useState('') // honeypot — humans never fill this
   const [sending, setSending] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [message, setMessage] = useState('')
 
-  async function copyEmail() {
-    try {
-      await navigator.clipboard.writeText(EMAIL)
-      setCopied(true)
-      toast.success('Email copied to clipboard!')
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      toast.error('Could not copy email')
-    }
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (sending) return
-    setSending(true)
+    const form = e.currentTarget
+    const data = new FormData(form)
 
+    const payload = {
+      name: String(data.get('name') ?? '').trim(),
+      email: String(data.get('email') ?? '').trim(),
+      subject: String(data.get('subject') ?? '').trim(),
+      message: String(data.get('message') ?? '').trim(),
+      // Honeypot: real visitors never see this field.
+      website: String(data.get('website') ?? ''),
+    }
+
+    if (payload.message.length < 10) {
+      toast.error('Please write at least 10 characters.')
+      return
+    }
+
+    setSending(true)
     try {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, subject, message, website }),
+        body: JSON.stringify(payload),
       })
-      const data = await res.json()
+      const body = await res.json().catch(() => ({}))
 
       if (!res.ok) {
-        throw new Error(data.error || 'Something went wrong')
+        toast.error(body?.error ?? 'Something went wrong. Please try again.')
+        return
       }
 
-      toast.success('Message sent successfully! I will get back to you soon.')
-      setName('')
-      setEmail('')
-      setSubject('')
+      toast.success('Message received — I usually reply within a day.')
+      form.reset()
       setMessage('')
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to send message. Please try again.')
+    } catch {
+      toast.error('Network error. Please email me directly instead.')
     } finally {
       setSending(false)
     }
   }
 
+  async function copyEmail() {
+    try {
+      await navigator.clipboard.writeText(EMAIL)
+      setCopied(true)
+      toast.success('Email copied')
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      toast.error('Could not copy — please select it manually.')
+    }
+  }
+
   return (
-    <section id="contact" className="relative z-10 py-20 md:py-24">
-      <div className="mx-auto w-[min(72rem,calc(100%-2rem))]">
-        <div className="glass-strong grid grid-cols-1 gap-10 rounded-3xl p-6 sm:p-8 md:grid-cols-2 md:p-12">
-          <motion.div
-            initial={{ opacity: 0, x: -24 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.6 }}
-            className="flex min-w-0 flex-col justify-center"
+    <section id="contact" className="relative z-10 border-t border-border py-20 md:py-28">
+      <div className="mx-auto grid w-[min(72rem,calc(100%-2rem))] gap-12 md:w-[min(72rem,calc(100%-4rem))] lg:grid-cols-2 lg:gap-16">
+        <Reveal>
+          <p className="eyebrow mb-4">
+            <span aria-hidden="true">05</span> Contact
+          </p>
+          <h2 className="text-balance font-heading text-3xl font-bold tracking-tight md:text-4xl">
+            Let&apos;s talk about your frontend roster.
+          </h2>
+          <p className="mt-4 max-w-[34rem] leading-relaxed text-muted-foreground">
+            Send a role description, a take-home, or a 20-minute call invite. Messages are stored
+            server-side and mailed to me, so nothing gets lost.
+          </p>
+
+          <dl className="mt-8 grid gap-px overflow-hidden rounded-2xl border border-border bg-border/40">
+            {CHANNELS.map((c) => (
+              <div key={c.label} className="grid gap-0.5 bg-card/70 p-4 backdrop-blur-sm">
+                <dt className="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-foreground">
+                  {c.label}
+                </dt>
+                <dd>
+                  <a
+                    href={c.href}
+                    target={c.href.startsWith('http') ? '_blank' : undefined}
+                    rel={c.href.startsWith('http') ? 'noreferrer noopener' : undefined}
+                    className="text-[0.92rem] transition-colors hover:text-primary"
+                  >
+                    {c.value}
+                  </a>
+                </dd>
+              </div>
+            ))}
+          </dl>
+
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={copyEmail}
+              className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2.5 text-[0.82rem] font-semibold transition-all hover:-translate-y-0.5 hover:border-primary hover:text-primary"
+            >
+              {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+              {copied ? 'Copied' : 'Copy email'}
+            </button>
+
+            <div className="flex items-center gap-3 text-muted-foreground">
+              {SOCIALS.map(({ Icon, href, label }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  aria-label={label}
+                  className="transition-all hover:-translate-y-0.5 hover:text-primary"
+                >
+                  <Icon className="size-5" />
+                </a>
+              ))}
+            </div>
+          </div>
+        </Reveal>
+
+        <Reveal delay={100}>
+          <form
+            onSubmit={onSubmit}
+            className="grid gap-3.5 rounded-3xl border border-border bg-card/85 p-5 backdrop-blur-md md:p-7"
           >
-            <span className="mb-4 inline-flex w-fit items-center gap-2 rounded-full border border-primary/25 bg-primary/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-primary">
-              <MessageSquare className="size-3.5" aria-hidden="true" />
-              Contact
-            </span>
-            <h2 className="text-balance text-3xl font-bold tracking-tight md:text-4xl">
-              Get In <span className="text-primary">Touch</span>
-            </h2>
-            <p className="mt-4 leading-relaxed text-muted-foreground">
-              I&apos;m currently looking for new opportunities. Whether you have a question, a
-              project idea, or just want to say hi, I&apos;ll try my best to get back to you!
-            </p>
-
-            <div className="mt-6 flex flex-wrap items-center gap-3">
-              <span className="inline-flex items-center gap-2 rounded-full bg-accent/10 px-3.5 py-1.5 text-xs font-semibold text-accent">
-                <span className="relative flex size-2">
-                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-accent opacity-60" />
-                  <span className="relative inline-flex size-2 rounded-full bg-accent" />
+            <div className="grid gap-3.5 sm:grid-cols-2">
+              <label className="grid gap-1.5">
+                <span className="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted-foreground">
+                  Your name
                 </span>
-                Available for work
+                <input
+                  name="name"
+                  required
+                  minLength={2}
+                  maxLength={100}
+                  autoComplete="name"
+                  placeholder="Priya Sharma"
+                  className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-[0.92rem] outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground/70 focus:border-primary focus:ring-[3px] focus:ring-primary/25"
+                />
+              </label>
+              <label className="grid gap-1.5">
+                <span className="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted-foreground">
+                  Email
+                </span>
+                <input
+                  name="email"
+                  type="email"
+                  required
+                  maxLength={200}
+                  autoComplete="email"
+                  placeholder="you@company.com"
+                  className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-[0.92rem] outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground/70 focus:border-primary focus:ring-[3px] focus:ring-primary/25"
+                />
+              </label>
+            </div>
+
+            <label className="grid gap-1.5">
+              <span className="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted-foreground">
+                Role &amp; company
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3.5 py-1.5 text-xs font-medium text-muted-foreground">
-                <Clock className="size-3.5" aria-hidden="true" />
-                Replies within 24 hours
-              </span>
-            </div>
-
-            <div className="mt-8 space-y-4">
-              <div className="glass group flex items-center gap-4 rounded-2xl p-4 transition-colors hover:border-primary/40">
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform group-hover:scale-110">
-                  <MailIcon className="size-5" aria-hidden="true" />
-                </span>
-                <a href={`mailto:${EMAIL}`} className="min-w-0 flex-1">
-                  <span className="block text-xs text-muted-foreground">Email</span>
-                  <span className="block truncate text-sm font-semibold">{EMAIL}</span>
-                </a>
-                <button
-                  type="button"
-                  onClick={copyEmail}
-                  aria-label="Copy email address"
-                  className="glass flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-primary"
-                >
-                  {copied ? (
-                    <Check className="size-4 text-accent" />
-                  ) : (
-                    <Copy className="size-4" />
-                  )}
-                </button>
-              </div>
-              <div className="glass flex items-center gap-4 rounded-2xl p-4">
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
-                  <MapPin className="size-5" aria-hidden="true" />
-                </span>
-                <span>
-                  <span className="block text-xs text-muted-foreground">Location</span>
-                  <span className="block text-sm font-semibold">India · Open to remote</span>
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-8 md:mt-10">
-              <p className="mb-3 text-sm text-muted-foreground">Connect with me</p>
-              <div className="flex flex-wrap items-center gap-3">
-                <a
-                  href="https://github.com/theafzalhussain"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="GitHub profile"
-                  className="glass flex size-11 items-center justify-center rounded-xl text-muted-foreground transition-all hover:-translate-y-1 hover:text-primary"
-                >
-                  <GithubIcon className="size-5" />
-                </a>
-                <a
-                  href="https://www.linkedin.com/in/afzalhussain"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="LinkedIn profile"
-                  className="glass flex size-11 items-center justify-center rounded-xl text-muted-foreground transition-all hover:-translate-y-1 hover:text-primary"
-                >
-                  <LinkedinIcon className="size-5" />
-                </a>
-                <a
-                  href="https://wa.me/918447859784"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="WhatsApp"
-                  className="glass flex size-11 items-center justify-center rounded-xl text-muted-foreground transition-all hover:-translate-y-1 hover:text-primary"
-                >
-                  <WhatsappIcon className="size-5" />
-                </a>
-                <a
-                  href="https://www.instagram.com/theafzalhussain"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Instagram profile"
-                  className="glass flex size-11 items-center justify-center rounded-xl text-muted-foreground transition-all hover:-translate-y-1 hover:text-primary"
-                >
-                  <InstagramIcon className="size-5" />
-                </a>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.form
-            initial={{ opacity: 0, x: 24 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            onSubmit={handleSubmit}
-            className="flex min-w-0 flex-col gap-4"
-          >
-            <div className="grid gap-4 sm:grid-cols-2">
-              <FloatingField id="name" label="Your Name" value={name} onChange={setName} />
-              <FloatingField
-                id="email"
-                label="Email Address"
-                type="email"
-                value={email}
-                onChange={setEmail}
-              />
-            </div>
-            <FloatingField
-              id="subject"
-              label="Subject"
-              required={false}
-              value={subject}
-              onChange={setSubject}
-            />
-            <div>
-              <FloatingField
-                id="message"
-                label="Your Message"
-                textarea
-                value={message}
-                onChange={setMessage}
-                maxLength={MESSAGE_LIMIT}
-              />
-              <p
-                className={`mt-1.5 text-right font-mono text-xs ${
-                  message.length > MESSAGE_LIMIT - 50 ? 'text-accent' : 'text-muted-foreground'
-                }`}
-              >
-                {message.length}/{MESSAGE_LIMIT}
-              </p>
-            </div>
-            {/* Honeypot field — hidden from humans, tempting for bots.
-                If it ever gets a value, the API route rejects the submission. */}
-            <div className="hidden" aria-hidden="true">
-              <label htmlFor="website">Website</label>
               <input
-                id="website"
-                name="website"
-                type="text"
-                tabIndex={-1}
-                autoComplete="off"
-                value={website}
-                onChange={(e) => setWebsite(e.target.value)}
+                name="subject"
+                maxLength={150}
+                placeholder="Frontend Intern — Acme Technologies"
+                className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-[0.92rem] outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground/70 focus:border-primary focus:ring-[3px] focus:ring-primary/25"
               />
+            </label>
+
+            <label className="grid gap-1.5">
+              <span className="flex items-center justify-between font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted-foreground">
+                Message
+                <span>
+                  {message.length}/{MAX_MESSAGE}
+                </span>
+              </span>
+              <textarea
+                name="message"
+                required
+                rows={5}
+                minLength={10}
+                maxLength={MAX_MESSAGE}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Tell me about the team, the stack and the timeline."
+                className="w-full resize-y rounded-xl border border-border bg-background px-3.5 py-2.5 text-[0.92rem] outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground/70 focus:border-primary focus:ring-[3px] focus:ring-primary/25"
+              />
+            </label>
+
+            {/* Honeypot — hidden from humans, filled by bots. */}
+            <div className="absolute -left-[9999px]" aria-hidden="true">
+              <label>
+                Website
+                <input name="website" tabIndex={-1} autoComplete="off" />
+              </label>
             </div>
 
             <button
               type="submit"
               disabled={sending}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-[0_0_28px_-8px_var(--glow)] transition-all hover:scale-[1.02] hover:shadow-[0_0_40px_-6px_var(--glow)] active:scale-95 disabled:opacity-60"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {sending ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" /> Sending...
-                </>
-              ) : (
-                <>
-                  <Send className="size-4" /> Send Message
-                </>
-              )}
+              {sending ? 'Sending…' : 'Send message'}
+              {!sending && <Send className="size-4" />}
             </button>
-          </motion.form>
-        </div>
+          </form>
+        </Reveal>
       </div>
     </section>
   )

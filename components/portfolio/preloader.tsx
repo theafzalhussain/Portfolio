@@ -1,77 +1,72 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
-
-const DURATION_MS = 1500
-const EXIT_MS = 450
 
 /**
- * Full-screen brand preloader: monogram + eased progress counter.
- * Unmounts itself after the run; body scroll is locked while it shows.
+ * Brand preloader. The percentage is clamped to 0–100 (the previous build
+ * could render a negative value), settles on `load`, and has a hard 2.6s
+ * cap so a slow third-party asset can never hold the page hostage.
  */
 export function Preloader() {
-  const [progress, setProgress] = useState(0)
+  const [pct, setPct] = useState(0)
   const [done, setDone] = useState(false)
-  const [hidden, setHidden] = useState(false)
 
   useEffect(() => {
-    document.body.style.overflow = 'hidden'
-    const start = performance.now()
-    let raf = 0
-    let exitTimer = 0
-
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / DURATION_MS)
-      const eased = 1 - Math.pow(1 - t, 3)
-      setProgress(Math.round(eased * 100))
-      if (t < 1) {
-        raf = requestAnimationFrame(tick)
-      } else {
-        setDone(true)
-        exitTimer = window.setTimeout(() => {
-          setHidden(true)
-          document.body.style.overflow = ''
-        }, EXIT_MS)
-      }
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setPct(100)
+      setDone(true)
+      return
     }
-    raf = requestAnimationFrame(tick)
+
+    let value = 0
+    let settled = false
+
+    const tick = setInterval(() => {
+      value = Math.min(92, value + Math.random() * 16 + 6)
+      setPct(Math.max(0, Math.min(100, Math.round(value))))
+      if (value >= 92) clearInterval(tick)
+    }, 130)
+
+    function settle() {
+      if (settled) return
+      settled = true
+      clearInterval(tick)
+      setPct(100)
+      setTimeout(() => setDone(true), 260)
+    }
+
+    const onLoad = () => setTimeout(settle, 320)
+    if (document.readyState === 'complete') onLoad()
+    else window.addEventListener('load', onLoad)
+
+    const cap = setTimeout(settle, 2600)
 
     return () => {
-      cancelAnimationFrame(raf)
-      clearTimeout(exitTimer)
-      document.body.style.overflow = ''
+      clearInterval(tick)
+      clearTimeout(cap)
+      window.removeEventListener('load', onLoad)
     }
   }, [])
 
-  if (hidden) return null
-
   return (
-    <motion.div
-      initial={false}
-      animate={{ opacity: done ? 0 : 1, scale: done ? 1.03 : 1 }}
-      transition={{ duration: 0.4, ease: 'easeOut' }}
-      className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-8 bg-background"
+    <div
+      aria-hidden="true"
+      className={`fixed inset-0 z-[300] grid place-items-center bg-background transition-[opacity,visibility] duration-[600ms] ${
+        done ? 'invisible opacity-0' : 'visible opacity-100'
+      }`}
     >
-      {/* Monogram */}
-      <div className="relative flex size-24 items-center justify-center">
-        <span className="absolute inset-0 animate-spin-slow rounded-full border border-primary/20 border-t-primary/70" />
-        <span className="glass-strong absolute inset-2 rounded-full" />
-        <span className="font-heading relative text-3xl font-bold text-primary">AH</span>
-      </div>
-
-      {/* Progress */}
-      <div className="flex w-56 flex-col items-center gap-3">
-        <div className="h-1 w-full overflow-hidden rounded-full bg-secondary">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-[width] duration-150 ease-out"
-            style={{ width: `${progress}%` }}
+      <div className="grid justify-items-center gap-4">
+        <span className="font-heading text-4xl font-bold tracking-wide">AH</span>
+        <span className="block h-[2px] w-[150px] overflow-hidden rounded-full bg-border">
+          <span
+            className="block h-full bg-primary transition-[width] duration-200 ease-linear"
+            style={{ width: `${pct}%` }}
           />
-        </div>
-        <p className="font-mono text-xs tracking-[0.3em] text-muted-foreground">
-          {progress < 100 ? 'LOADING' : 'WELCOME'} · {progress}%
-        </p>
+        </span>
+        <span className="font-mono text-[0.68rem] tracking-[0.1em] text-muted-foreground">
+          {pct}%
+        </span>
       </div>
-    </motion.div>
+    </div>
   )
 }
