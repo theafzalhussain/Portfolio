@@ -44,10 +44,6 @@ const GLYPH: Record<string, string> = {
     '<rect x="3.2" y="4.6" width="17.6" height="14.8" rx="2.4"/><circle cx="8.6" cy="10" r="1.6"/><path d="m4.4 17.4 4.8-4.4 3.4 3 3-2.6 4 3.6"/>',
   brain:
     '<path d="M9.6 4.4a2.8 2.8 0 0 0-2.8 2.8 2.6 2.6 0 0 0-1.4 4.6A2.8 2.8 0 0 0 7 16.6a2.6 2.6 0 0 0 4.6 1.6V5.8a2.6 2.6 0 0 0-2-1.4ZM14.4 4.4a2.8 2.8 0 0 1 2.8 2.8 2.6 2.6 0 0 1 1.4 4.6 2.8 2.8 0 0 1-1.6 4.8 2.6 2.6 0 0 1-4.6 1.6"/>',
-  python:
-    '<path d="M12 3.2c-3 0-3.6 1.2-3.6 2.6V8h5.2v1.2H6.8c-1.8 0-3 1.4-3 3.6s1 3.6 2.6 3.6h1.4v-2.2c0-1.8 1.4-3 3.2-3h3.6c1.6 0 2.8-1.2 2.8-2.8V5.8c0-1.4-1.2-2.6-3.2-2.6H12Z"/><path d="M10.2 5.6h.01"/>',
-  mobile:
-    '<rect x="5.6" y="2.4" width="12.8" height="19.2" rx="2.8"/><path d="M12 18.4h.01"/>',
 }
 
 type Category = 'language' | 'frontend' | 'backend' | 'data' | 'tools'
@@ -71,8 +67,6 @@ const SKILLS: Skill[] = [
   { name: 'TypeScript', cat: 'language', glyph: 'ts', color: '#38bdf8', proof: '94–96% of 3 repos' },
   { name: 'HTML5', cat: 'language', glyph: 'code', color: '#ff8904', proof: 'Semantic, accessible markup' },
   { name: 'CSS3 & SCSS', cat: 'language', glyph: 'brush', color: '#22d3ee', proof: 'Design systems, motion' },
-  { name: 'Python', cat: 'language', glyph: 'python', color: '#4ade80', proof: 'Saarthi AI agent (95%)' },
-  { name: 'Kotlin', cat: 'language', glyph: 'mobile', color: '#a78bfa', proof: 'Saarthi device module' },
 
   // Frontend
   { name: 'React', cat: 'frontend', glyph: 'atom', color: '#22d3ee', proof: 'Component architecture, hooks' },

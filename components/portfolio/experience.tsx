@@ -39,7 +39,7 @@ const TIMELINE: Entry[] = [
     year: '2026',
     title: 'Production scale, and looking for a team',
     org: 'Open to frontend internships',
-    body: 'eShopper and MovieZone took me into payments, background workers, real-time state and PWA delivery. Saarthi took me into Python. Now I want code review and a product team around me.',
+    body: 'eShopper and MovieZone took me into payments, background workers, real-time state and PWA delivery. Now I want code review and a product team around me.',
     now: true,
   },
 ]

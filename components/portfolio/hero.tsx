@@ -161,22 +161,38 @@ export function Hero() {
             Available for internships · Delhi NCR &amp; Remote
           </p>
 
-          <h1 className="text-balance font-heading text-4xl leading-[1.05] font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-            I build <span className="text-primary">production</span> interfaces
-            <br className="hidden sm:block" /> for the modern web.
+          {/* The name is the h1: it is the personal brand and the strongest
+              SEO signal on the page. The pitch line sits under it. */}
+          <h1 className="font-heading text-[2.75rem] leading-[1.02] font-bold tracking-[-0.03em] sm:text-6xl md:text-7xl lg:text-[5.25rem]">
+            Afzal Hussain
           </h1>
 
-          <p className="mt-6 flex flex-wrap items-center gap-2 font-mono text-sm">
+          <div className="mt-4 flex items-center gap-3">
+            <span aria-hidden="true" className="h-px w-10 bg-primary sm:w-14" />
+            <p className="font-mono text-[0.78rem] tracking-[0.06em] text-primary sm:text-sm">
+              Frontend Developer
+              <span className="hidden text-muted-foreground sm:inline">
+                {' '}· React · Next.js · TypeScript
+              </span>
+            </p>
+          </div>
+
+          <p className="mt-6 max-w-[30rem] text-balance font-heading text-xl leading-snug font-semibold tracking-tight sm:text-2xl md:max-w-[34rem] md:text-3xl">
+            I build <span className="text-primary">production</span> interfaces for the modern
+            web.
+          </p>
+
+          <p className="mt-5 flex flex-wrap items-center gap-2 font-mono text-[0.8rem] sm:text-sm">
             <span className="text-muted-foreground">const role =</span>
             <span aria-live="polite">
               <Typewriter />
             </span>
           </p>
 
-          <p className="mt-6 max-w-[34rem] leading-relaxed text-muted-foreground md:text-lg">
-            Frontend developer in New Delhi working across React, Next.js, TypeScript and the
-            MERN stack. Five deployed applications — including a payments-ready commerce
-            platform with Redis caching, background workers and real-time order state.
+          <p className="mt-5 max-w-[34rem] leading-relaxed text-muted-foreground md:text-lg">
+            Based in New Delhi, working across React, Next.js, TypeScript and the MERN stack.
+            Five deployed applications — including a payments-ready commerce platform with
+            Redis caching, background workers and real-time order state.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">

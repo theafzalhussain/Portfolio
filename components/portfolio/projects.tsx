@@ -7,7 +7,7 @@ import { GithubIcon } from '@/components/portfolio/brand-icons'
 import { Reveal } from '@/components/ui/reveal'
 import { TiltCard } from '@/components/ui/tilt-card'
 
-type Tag = 'fullstack' | 'frontend' | 'backend' | 'pwa' | 'ai'
+type Tag = 'fullstack' | 'frontend' | 'backend' | 'pwa'
 
 interface Project {
   id: string
@@ -187,40 +187,6 @@ const PROJECTS: Project[] = [
       'Instant-feeling search and navigation across 250 records with roughly 70% fewer network requests than an uncached implementation.',
   },
   {
-    id: 'saarthi',
-    name: 'Saarthi',
-    type: 'Hinglish AI agent · Python',
-    year: '2026',
-    tags: ['ai', 'backend'],
-    code: 'https://github.com/theafzalhussain/Sarthi',
-    summary:
-      'A lightweight personal AI agent built for Hinglish (Hindi–English) interaction and safe device control, designed to run on low-resource hardware with a privacy-first, local-first workflow.',
-    metrics: [
-      { v: '95%', k: 'Python' },
-      { v: '4%', k: 'Kotlin module' },
-      { v: 'Local', k: 'First execution' },
-      { v: 'Hinglish', k: 'Primary interface' },
-    ],
-    stack: ['Python', 'Kotlin', 'Speech I/O', 'Local-first workflows', 'Device automation'],
-    problem:
-      'Most assistants assume clean English, a fast machine and a round trip to someone else\'s servers. I wanted one that understands how people in Delhi actually speak — switching between Hindi and English mid-sentence — and that keeps execution on the device.',
-    built: [
-      '<strong>A Hinglish-first intent layer</strong> that handles code-switched input rather than forcing a single language.',
-      '<strong>Guarded device control</strong> — actions are explicit and scoped instead of a blanket shell escape.',
-      '<strong>A small Kotlin component</strong> for the Android-side surface, with the core logic staying in Python.',
-      '<strong>A low-resource target</strong>, so it stays usable on modest hardware instead of assuming a workstation.',
-    ],
-    architecture:
-      'Python core (~95% of the repository) handling intent parsing and action dispatch, with a thin Kotlin layer for mobile device integration. Designed around local execution so transcripts and commands do not have to leave the machine.',
-    decisions: [
-      '<strong>Hinglish as the primary interface, not a fallback.</strong> Forcing English is the reason most assistants feel foreign to Indian users.',
-      '<strong>Privacy-first by default.</strong> Local execution removes a whole class of data questions instead of answering them in a policy page.',
-      '<strong>Explicit action scoping</strong> over open-ended command execution — an agent that can do anything is an agent you cannot trust.',
-    ],
-    outcome:
-      'A working proof that a useful assistant does not need a datacentre — and the project where I moved outside JavaScript into Python and Kotlin.',
-  },
-  {
     id: 'portfolio',
     name: 'This portfolio',
     type: 'Next.js site with contact pipeline',
@@ -269,7 +235,6 @@ const FILTERS: { id: Tag | 'all'; label: string }[] = [
   { id: 'frontend', label: 'Frontend' },
   { id: 'backend', label: 'Backend' },
   { id: 'pwa', label: 'PWA' },
-  { id: 'ai', label: 'AI / Python' },
 ]
 
 function Metrics({ items, className }: { items: { v: string; k: string }[]; className?: string }) {
@@ -592,7 +557,7 @@ export function Projects() {
             <span aria-hidden="true">01</span> Selected work
           </p>
           <h2 className="text-balance font-heading text-3xl font-bold tracking-tight md:text-4xl">
-            Six products. Every one of them clickable.
+            Five products. Every one of them clickable.
           </h2>
           <p className="mt-4 leading-relaxed text-muted-foreground">
             Not tutorial clones. Each runs with real APIs, real failure handling and measured

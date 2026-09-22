@@ -4,7 +4,7 @@ const TECH = [
   'React.js', 'Next.js', 'TypeScript', 'Tailwind CSS', 'Node.js', 'Express',
   'MongoDB', 'Mongoose', 'Redis', 'BullMQ', 'Socket.IO', 'Razorpay',
   'Three.js', 'Framer Motion', 'Redux Toolkit', 'TanStack Query', 'SWR',
-  'Cloudinary', 'Firebase', 'Python', 'Kotlin', 'PWA', 'REST APIs', 'Git',
+  'Cloudinary', 'Firebase', 'PWA', 'REST APIs', 'Git',
 ]
 
 export function TechMarquee() {

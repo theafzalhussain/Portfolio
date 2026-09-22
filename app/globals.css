@@ -348,18 +348,115 @@
   left: 0;
   opacity: 0;
   will-change: transform, opacity;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   font-family: var(--font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.02em;
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
   white-space: nowrap;
-  padding: 0.3rem 0.62rem;
+  padding: 0.38rem 0.78rem;
   border-radius: 999px;
-  border: 1px solid currentColor;
-  background: color-mix(in oklch, var(--background) 78%, transparent);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  box-shadow: 0 6px 18px -8px oklch(0 0 0 / 55%);
+  /* 1.5px border + a colour-matched glow: at a distance these read as
+     lit chips rather than grey text lost against the scene. */
+  border: 1.5px solid color-mix(in oklch, currentColor 70%, transparent);
+  background: color-mix(in oklch, var(--background) 88%, transparent);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  box-shadow:
+    0 0 0 1px color-mix(in oklch, var(--background) 60%, transparent),
+    0 0 18px -4px currentColor,
+    0 8px 22px -10px oklch(0 0 0 / 70%);
+  text-shadow: 0 0 12px color-mix(in oklch, currentColor 45%, transparent);
   transition: opacity 0.35s linear;
+}
+
+/* Leading status dot — gives each chip a light source and reads as a
+   legend entry rather than floating text. */
+.orbit-badge::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 8px 1px currentColor;
+  flex: none;
+}
+
+/* ---------- Aurora depth layer ---------- */
+
+.aurora {
+  position: fixed;
+  inset: -25%;
+  z-index: -2;
+  pointer-events: none;
+  overflow: hidden;
+  filter: blur(90px);
+  opacity: 0.55;
+}
+
+.light .aurora {
+  opacity: 0.3;
+}
+
+.aurora span {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  mix-blend-mode: screen;
+}
+
+.light .aurora span {
+  mix-blend-mode: multiply;
+}
+
+.aurora span:nth-child(1) {
+  width: 46vw;
+  height: 46vw;
+  top: 4%;
+  left: 52%;
+  background: radial-gradient(circle, color-mix(in oklch, var(--primary) 55%, transparent), transparent 68%);
+  animation: aurora-a 34s ease-in-out infinite;
+}
+
+.aurora span:nth-child(2) {
+  width: 40vw;
+  height: 40vw;
+  top: 38%;
+  left: 8%;
+  background: radial-gradient(circle, color-mix(in oklch, var(--accent) 48%, transparent), transparent 68%);
+  animation: aurora-b 42s ease-in-out infinite;
+}
+
+.aurora span:nth-child(3) {
+  width: 34vw;
+  height: 34vw;
+  top: 66%;
+  left: 62%;
+  background: radial-gradient(circle, color-mix(in oklch, var(--primary) 40%, transparent), transparent 70%);
+  animation: aurora-c 38s ease-in-out infinite;
+}
+
+@keyframes aurora-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-8vw, 6vh, 0) scale(1.18); }
+}
+
+@keyframes aurora-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.08); }
+  50% { transform: translate3d(7vw, -5vh, 0) scale(0.9); }
+}
+
+@keyframes aurora-c {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(0.95); }
+  50% { transform: translate3d(-5vw, -7vh, 0) scale(1.15); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora span {
+    animation: none;
+  }
 }
 
 /* ---------- Skill cards ---------- */

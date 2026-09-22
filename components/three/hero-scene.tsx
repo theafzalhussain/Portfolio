@@ -108,18 +108,34 @@ function Core({ colors, reduced }: { colors: SceneColors; reduced: boolean }) {
   })
 
   return (
-    <mesh ref={mesh}>
-      <icosahedronGeometry args={[2.05, 24]} />
-      <MeshDistortMaterial
-        color={colors.core}
-        emissive={colors.emissive}
-        emissiveIntensity={0.35}
-        roughness={0.24}
-        metalness={0.9}
-        distort={reduced ? 0 : 0.28}
-        speed={1.1}
-      />
-    </mesh>
+    <group>
+      <mesh ref={mesh}>
+        <icosahedronGeometry args={[2.05, 24]} />
+        <MeshDistortMaterial
+          color={colors.core}
+          emissive={colors.emissive}
+          emissiveIntensity={0.35}
+          roughness={0.24}
+          metalness={0.9}
+          distort={reduced ? 0 : 0.28}
+          speed={1.1}
+        />
+      </mesh>
+
+      {/* Atmosphere shell: back-faces only, additive, so it reads as a rim
+          glow around the orb instead of a second visible sphere. */}
+      <mesh scale={1.16}>
+        <sphereGeometry args={[2.05, 48, 48]} />
+        <meshBasicMaterial
+          color={colors.wire}
+          transparent
+          opacity={0.07}
+          side={THREE.BackSide}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </mesh>
+    </group>
   )
 }
 
@@ -210,17 +226,24 @@ function Satellites({ colors, reduced }: { colors: SceneColors; reduced: boolean
    is moved to the resulting screen coordinate.
    ───────────────────────────────────────────── */
 
+const CORE_RADIUS = 2.05
+
 function LabelProjector({
   nodes,
   reduced,
+  worldRef,
 }: {
   nodes: React.RefObject<(HTMLSpanElement | null)[]>
   reduced: boolean
+  worldRef: React.RefObject<THREE.Group | null>
 }) {
   const { camera, size } = useThree()
   const anchors = useRef<(THREE.Object3D | null)[]>([])
   const tmp = useMemo(() => new THREE.Vector3(), [])
   const world = useMemo(() => new THREE.Vector3(), [])
+  const coreCenter = useMemo(() => new THREE.Vector3(), [])
+  const coreEdge = useMemo(() => new THREE.Vector3(), [])
+  const camRight = useMemo(() => new THREE.Vector3(), [])
   const guard = useRef({ from: 0.55, to: 0.68 })
 
   // Measure the real right edge of the hero copy column so the fade
@@ -256,6 +279,29 @@ function LabelProjector({
     const halfH = size.height / 2
     const g = guard.current
 
+    // Project the solid core to a screen-space circle. The labels live in a
+    // DOM layer that always paints above the canvas, so without this a label
+    // swinging behind the orb would still draw on top of it and break the
+    // illusion of depth.
+    let coreX = 0
+    let coreY = 0
+    let coreR = 0
+    let coreDepth = Infinity
+    const group = worldRef.current
+    if (group) {
+      group.getWorldPosition(coreCenter)
+      coreDepth = coreCenter.distanceTo(camera.position)
+      camera.matrixWorld.extractBasis(camRight, tmp, tmp)
+      coreEdge
+        .copy(coreCenter)
+        .addScaledVector(camRight, CORE_RADIUS * group.scale.x)
+      coreCenter.project(camera)
+      coreEdge.project(camera)
+      coreX = coreCenter.x * halfW + halfW
+      coreY = -coreCenter.y * halfH + halfH
+      coreR = Math.abs(coreEdge.x * halfW + halfW - coreX)
+    }
+
     for (let i = 0; i < ORBIT_SKILLS.length; i++) {
       const el = list[i]
       const anchor = anchors.current[i]
@@ -282,8 +328,21 @@ function LabelProjector({
 
       const x = world.x * halfW + halfW
       const y = -world.y * halfH + halfH
-      const scale = THREE.MathUtils.clamp(1 - (depth - 9) / 12, 0.62, 1.06)
-      let fade = THREE.MathUtils.clamp(1 - (depth - 10.5) / 9, 0.22, 1)
+
+      // Gentler depth ramps than before: the labels are the content here, so
+      // a far one must still be readable rather than shrinking into noise.
+      const scale = THREE.MathUtils.clamp(1 - (depth - 9) / 22, 0.86, 1.1)
+      let fade = THREE.MathUtils.clamp(1 - (depth - 11) / 16, 0.58, 1)
+
+      // Hide behind the orb.
+      if (coreR > 0 && depth > coreDepth) {
+        const dx = x - coreX
+        const dy = y - coreY
+        const inside = Math.sqrt(dx * dx + dy * dy) / coreR
+        if (inside < 1.04) {
+          fade *= THREE.MathUtils.smoothstep(inside, 0.72, 1.04) * 0.9
+        }
+      }
 
       // Screen-space guards: the headline owns the left column, and a badge
       // clipped mid-word at the frame edge looks broken. Both fade instead.
@@ -381,7 +440,7 @@ function SceneContent({
         <Cage colors={colors} reduced={reduced} />
         <Rings colors={colors} />
         <Satellites colors={colors} reduced={reduced} />
-        <LabelProjector nodes={labelNodes} reduced={reduced} />
+        <LabelProjector nodes={labelNodes} reduced={reduced} worldRef={worldRef} />
         {!reduced && (
           <Sparkles count={40} scale={9} size={2.4} speed={0.3} color={colors.dust} />
         )}

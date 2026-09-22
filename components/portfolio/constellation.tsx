@@ -11,6 +11,15 @@ interface Node {
   r: number
 }
 
+interface Comet {
+  x: number
+  y: number
+  vx: number
+  vy: number
+  life: number
+  len: number
+}
+
 interface Palette {
   node: string
   link: string
@@ -70,6 +79,8 @@ export function Constellation() {
     let height = 0
     let link = 150
     let nodes: Node[] = []
+    let comets: Comet[] = []
+    let nextComet = 2500 + Math.random() * 6000
     let running = true
     let raf = 0
     let last = 0
@@ -132,6 +143,27 @@ export function Constellation() {
         ctx.fill()
       }
 
+      // Shooting stars: a slow, occasional streak so the field feels alive
+      // without becoming a screensaver.
+      for (const c of comets) {
+        const tailX = c.x - c.vx * c.len
+        const tailY = c.y - c.vy * c.len
+        const grad = ctx.createLinearGradient(tailX, tailY, c.x, c.y)
+        grad.addColorStop(0, `rgba(${P.glow},0)`)
+        grad.addColorStop(1, `rgba(${P.glow},${(0.55 * c.life).toFixed(3)})`)
+        ctx.strokeStyle = grad
+        ctx.lineWidth = 1.5
+        ctx.beginPath()
+        ctx.moveTo(tailX, tailY)
+        ctx.lineTo(c.x, c.y)
+        ctx.stroke()
+
+        ctx.fillStyle = `rgba(${P.glow},${(0.85 * c.life).toFixed(3)})`
+        ctx.beginPath()
+        ctx.arc(c.x, c.y, 1.8, 0, Math.PI * 2)
+        ctx.fill()
+      }
+
       if (ptr.active && ptr.gx > -9000) {
         const grad = ctx.createRadialGradient(ptr.gx, ptr.gy, 0, ptr.gx, ptr.gy, 120)
         grad.addColorStop(0, `rgba(${P.glow},${P.glowA})`)
@@ -174,6 +206,32 @@ export function Constellation() {
 
       ptr.gx += (ptr.x - ptr.gx) * 0.06
       ptr.gy += (ptr.y - ptr.gy) * 0.06
+
+      nextComet -= INTERVAL
+      if (nextComet <= 0 && comets.length < 2) {
+        nextComet = 7000 + Math.random() * 11000
+        const fromLeft = Math.random() > 0.5
+        const speed = 3.4 + Math.random() * 2.2
+        const angle = (Math.random() * 0.35 + 0.18) * Math.PI
+        comets.push({
+          x: fromLeft ? -40 : width + 40,
+          y: Math.random() * height * 0.55,
+          vx: (fromLeft ? 1 : -1) * Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 1,
+          len: 26 + Math.random() * 18,
+        })
+      }
+
+      for (const c of comets) {
+        c.x += c.vx
+        c.y += c.vy
+        // fade out over the back half of the crossing
+        if (c.y > height * 0.55 || c.x < -80 || c.x > width + 80) c.life -= 0.012
+      }
+      comets = comets.filter(
+        (c) => c.life > 0 && c.y < height + 120 && c.x > -220 && c.x < width + 220,
+      )
     }
 
     function frame(ts: number) {
@@ -244,5 +302,16 @@ export function Constellation() {
     if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height)
   }, [theme])
 
-  return <canvas ref={canvasRef} className="constellation-canvas" aria-hidden="true" />
+  return (
+    <>
+      {/* Slow-drifting colour depth behind the network. Pure CSS, so it
+          composites on the GPU and costs nothing per frame. */}
+      <div className="aurora" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
+      <canvas ref={canvasRef} className="constellation-canvas" aria-hidden="true" />
+    </>
+  )
 }

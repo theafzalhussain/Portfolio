@@ -72,11 +72,11 @@ export function About() {
               deploys.
             </p>
             <p>
-              Outside JavaScript I built <strong className="text-foreground">Saarthi</strong> in
-              Python and Kotlin — a Hinglish-first, privacy-first assistant for low-resource
-              hardware. I use AI tooling the way working teams do: as acceleration, not
-              authorship. Ask me about any file in any repo and I&apos;ll walk you through the
-              decision behind it.
+              I care about the parts that decide whether software survives contact with real
+              users: caching that degrades instead of collapsing, jobs that are safe to retry,
+              and interfaces that stay fast on a mid-range phone. I use AI tooling the way
+              working teams do — as acceleration, not authorship. Ask me about any file in any
+              repo and I&apos;ll walk you through the decision behind it.
             </p>
           </div>
 
