@@ -1,218 +1,240 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
-import { motion } from 'framer-motion'
 import { ArrowRight, Mail } from 'lucide-react'
 import { GithubIcon, LinkedinIcon } from '@/components/portfolio/brand-icons'
 
-// The 3D scene touches WebGL, so it is loaded client-side only.
-const HeroScene = dynamic(() => import('@/components/three/hero-scene'), {
-  ssr: false,
-  loading: () => (
-    <div className="flex h-full w-full items-center justify-center">
-      <span className="size-24 animate-pulse rounded-full bg-primary/15 blur-sm" />
-    </div>
-  ),
-})
+// three.js cannot render on the server, and a WebGL failure must never take
+// the hero down — so the scene is client-only and purely decorative.
+const HeroScene = dynamic(
+  () => import('@/components/three/hero-scene').then((m) => m.HeroScene),
+  { ssr: false },
+)
 
-const specializations = [
-  'Building Scalable Web Apps',
-  'MERN Stack Specialist',
-  'Open Source Enthusiast',
-  'API & Database Architect',
+const ROLES = [
+  '"Frontend Developer"',
+  '"React Engineer"',
+  '"Next.js Developer"',
+  '"Full-Stack (MERN)"',
 ]
 
-function TypingLine() {
-  const [index, setIndex] = useState(0)
+const STATS = [
+  { label: 'Production apps', value: 5, suffix: '' },
+  { label: 'REST endpoints shipped', value: 45, suffix: '+' },
+  { label: 'Lighthouse on shipped work', value: 90, suffix: '+' },
+  { label: 'Reusable components', value: 60, suffix: '+' },
+]
+
+function Typewriter() {
   const [text, setText] = useState('')
-  const [deleting, setDeleting] = useState(false)
+  const state = useRef({ word: 0, char: 0, deleting: false })
 
   useEffect(() => {
-    const current = specializations[index]
-    const delay = deleting ? 35 : text === current ? 1800 : 70
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setText(ROLES[0])
+      return
+    }
 
-    const timer = setTimeout(() => {
-      if (!deleting && text === current) {
-        setDeleting(true)
-      } else if (deleting && text === '') {
-        setDeleting(false)
-        setIndex((i) => (i + 1) % specializations.length)
+    let timer: ReturnType<typeof setTimeout>
+
+    function tick() {
+      const s = state.current
+      const word = ROLES[s.word]
+      setText(word.slice(0, s.char))
+
+      let delay = 72
+      if (!s.deleting && s.char < word.length) {
+        s.char += 1
+      } else if (!s.deleting && s.char === word.length) {
+        s.deleting = true
+        delay = 1700
+      } else if (s.deleting && s.char > 0) {
+        s.char -= 1
+        delay = 34
       } else {
-        setText(current.slice(0, text.length + (deleting ? -1 : 1)))
+        s.deleting = false
+        s.word = (s.word + 1) % ROLES.length
+        delay = 320
       }
-    }, delay)
+      timer = setTimeout(tick, delay)
+    }
 
+    tick()
     return () => clearTimeout(timer)
-  }, [text, deleting, index])
+  }, [])
 
   return (
-    <p className="font-mono text-base text-primary md:text-lg" aria-live="polite">
-      {'> '}
-      {text}
-      <span className="animate-caret ml-0.5 inline-block h-5 w-2.5 translate-y-1 bg-primary" aria-hidden="true" />
-    </p>
+    <>
+      <span className="text-primary">{text}</span>
+      <span
+        aria-hidden="true"
+        className="ml-[-0.2rem] inline-block h-[1.05em] w-[8px] translate-y-[2px] bg-primary animate-caret-blink"
+      />
+    </>
   )
 }
 
-const orbitTech = [
-  { label: 'MongoDB', color: 'text-emerald-400', ring: 0, delay: '0s' },
-  { label: 'Express', color: 'text-foreground', ring: 0, delay: '-8s' },
-  { label: 'React', color: 'text-cyan-400', ring: 1, delay: '0s' },
-  { label: 'Node.js', color: 'text-emerald-400', ring: 1, delay: '-7.3s' },
-  { label: 'JavaScript', color: 'text-yellow-400', ring: 1, delay: '-14.6s' },
-  { label: 'HTML & CSS', color: 'text-orange-400', ring: 2, delay: '0s' },
-  { label: 'Tailwind', color: 'text-cyan-300', ring: 2, delay: '-13s' },
-]
+function Counter({ value, suffix }: { value: number; suffix: string }) {
+  const ref = useRef<HTMLElement>(null)
+  // Seeded with the real number, so a visitor never sees a static "0+"
+  // if the observer has not fired yet (the old site shipped that bug).
+  const [display, setDisplay] = useState(value)
 
-/**
- * The hero visual: a real WebGL scene (distorted metal core, wireframe
- * 3D-architecture cage, orbiting rings, stars, grid floor) with the
- * glassmorphic tech badges orbiting on top in crisp HTML.
- */
-function TechOrb() {
-  const radii = ['5rem', '7.5rem', '10rem']
-  const durations = ['16s', '22s', '30s']
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+
+    if (
+      !('IntersectionObserver' in window) ||
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      setDisplay(value)
+      return
+    }
+
+    let raf = 0
+    let start: number | null = null
+
+    function step(ts: number) {
+      if (start === null) start = ts
+      const t = Math.min(1, (ts - start) / 1250)
+      const eased = 1 - Math.pow(1 - t, 3)
+      setDisplay(Math.round(value * eased))
+      if (t < 1) raf = requestAnimationFrame(step)
+    }
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0].isIntersecting) return
+        io.disconnect()
+        setDisplay(0)
+        raf = requestAnimationFrame(step)
+      },
+      { threshold: 0.4 },
+    )
+    io.observe(el)
+
+    return () => {
+      io.disconnect()
+      cancelAnimationFrame(raf)
+    }
+  }, [value])
 
   return (
-    <div className="animate-float-y relative mx-auto size-[18rem] sm:size-[22rem] lg:size-[28rem]">
-      {/* 3D scene */}
-      <div className="absolute inset-0" aria-hidden="true">
-        <HeroScene />
-      </div>
-
-      {/* Orbit rings */}
-      {radii.map((r, i) => (
-        <div
-          key={r}
-          aria-hidden="true"
-          className="pointer-events-none absolute rounded-full border border-primary/15"
-          style={{ width: `calc(${r} * 2)`, height: `calc(${r} * 2)` }}
-        />
-      ))}
-
-      {/* Orbiting badges */}
-      {orbitTech.map((tech) => (
-        <div
-          key={tech.label}
-          className={`absolute ${tech.ring === 1 ? 'animate-orbit-reverse' : 'animate-orbit'}`}
-          style={
-            {
-              '--orbit-radius': radii[tech.ring],
-              '--orbit-duration': durations[tech.ring],
-              animationDelay: tech.delay,
-            } as React.CSSProperties
-          }
-        >
-          <span
-            className={`glass block rounded-full px-3 py-1.5 font-mono text-xs font-medium whitespace-nowrap ${tech.color} shadow-lg`}
-          >
-            {tech.label}
-          </span>
-        </div>
-      ))}
-    </div>
+    <dd
+      ref={ref as React.RefObject<HTMLElement>}
+      className="mt-1.5 font-heading text-3xl leading-none text-foreground md:text-4xl"
+    >
+      {display}
+      {suffix}
+    </dd>
   )
 }
 
 export function Hero() {
   return (
-    <section id="top" className="relative z-10 flex min-h-screen items-center pt-24 pb-16 sm:pt-28">
-      <div className="mx-auto grid w-[min(72rem,calc(100%-2rem))] items-center gap-10 sm:gap-14 lg:grid-cols-2">
-        <div className="flex flex-col items-start gap-6">
-          <motion.span
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="glass animate-pulse-ring inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm text-accent"
-          >
-            <span className="relative flex size-2">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-accent opacity-60" />
-              <span className="relative inline-flex size-2 rounded-full bg-accent" />
+    <section
+      id="hero"
+      data-hero-stage
+      className="relative isolate flex min-h-[100svh] flex-col justify-end overflow-hidden pt-28 pb-8 md:pt-32"
+    >
+      <HeroScene />
+
+      {/* Vignette: keeps the copy readable over the scene without hiding it. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-[2]"
+        style={{
+          background:
+            'radial-gradient(85% 55% at 78% 30%, transparent 0%, color-mix(in oklch, var(--background) 72%, transparent) 80%), linear-gradient(to bottom, color-mix(in oklch, var(--background) 35%, transparent) 0%, transparent 22%, transparent 68%, color-mix(in oklch, var(--background) 90%, transparent) 100%)',
+        }}
+      />
+
+      <div className="relative z-[3] mx-auto grid w-[min(72rem,calc(100%-2rem))] gap-12 md:w-[min(72rem,calc(100%-4rem))]">
+        <div data-hero-copy className="max-w-[44rem]">
+          <p className="glass mb-6 inline-flex items-center gap-2 rounded-full px-3 py-1.5 font-mono text-[0.66rem] uppercase tracking-[0.13em] text-muted-foreground">
+            <span
+              aria-hidden="true"
+              className="size-1.5 rounded-full bg-accent animate-pulse-ring"
+            />
+            Available for internships · Delhi NCR &amp; Remote
+          </p>
+
+          <h1 className="text-balance font-heading text-4xl leading-[1.05] font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
+            I build <span className="text-primary">production</span> interfaces
+            <br className="hidden sm:block" /> for the modern web.
+          </h1>
+
+          <p className="mt-6 flex flex-wrap items-center gap-2 font-mono text-sm">
+            <span className="text-muted-foreground">const role =</span>
+            <span aria-live="polite">
+              <Typewriter />
             </span>
-            Available for Work
-          </motion.span>
+          </p>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-balance text-4xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl"
-          >
-            Hi, I&apos;m <span className="text-primary">Afzal Hussain</span>
-            <br />
-            Web Developer
-          </motion.h1>
+          <p className="mt-6 max-w-[34rem] leading-relaxed text-muted-foreground md:text-lg">
+            Frontend developer in New Delhi working across React, Next.js, TypeScript and the
+            MERN stack. Five deployed applications — including a payments-ready commerce
+            platform with Redis caching, background workers and real-time order state.
+          </p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.25 }}
-          >
-            <TypingLine />
-          </motion.div>
-
-          <motion.p
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.35 }}
-            className="max-w-xl text-pretty leading-relaxed text-muted-foreground"
-          >
-            I craft high-performance, production-grade web applications with MongoDB, Express,
-            React, and Node.js — turning complex problems into elegant, scalable products.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.45 }}
-            className="flex flex-wrap items-center gap-4"
-          >
+          <div className="mt-8 flex flex-wrap gap-3">
             <a
-              href="#projects"
-              className="group inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.03] active:scale-95"
+              href="#work"
+              className="group inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5 active:scale-95"
             >
-              View My Work
-              <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+              View selected work
+              <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
             </a>
-            <div className="flex items-center gap-2">
-              <a
-                href="https://github.com/theafzalhussain"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="GitHub profile"
-                className="glass flex size-11 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:text-primary"
-              >
-                <GithubIcon className="size-5" />
-              </a>
-              <a
-                href="https://www.linkedin.com/in/afzalhussain"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="LinkedIn profile"
-                className="glass flex size-11 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:text-primary"
-              >
-                <LinkedinIcon className="size-5" />
-              </a>
-              <a
-                href="#contact"
-                aria-label="Contact me"
-                className="glass flex size-11 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:text-primary"
-              >
-                <Mail className="size-5" />
-              </a>
-            </div>
-          </motion.div>
+            <a
+              href="#contact"
+              className="inline-flex items-center gap-2 rounded-full border border-border px-5 py-3 text-sm font-semibold transition-all hover:-translate-y-0.5 hover:border-primary hover:text-primary"
+            >
+              <Mail className="size-4" />
+              Start a conversation
+            </a>
+          </div>
+
+          <div className="mt-8 flex items-center gap-4 text-muted-foreground">
+            <a
+              href="https://github.com/theafzalhussain"
+              target="_blank"
+              rel="noreferrer noopener"
+              aria-label="GitHub profile"
+              className="transition-all hover:-translate-y-0.5 hover:text-primary"
+            >
+              <GithubIcon className="size-5" />
+            </a>
+            <a
+              href="https://www.linkedin.com/in/theafzalhussain/"
+              target="_blank"
+              rel="noreferrer noopener"
+              aria-label="LinkedIn profile"
+              className="transition-all hover:-translate-y-0.5 hover:text-primary"
+            >
+              <LinkedinIcon className="size-5" />
+            </a>
+            <span aria-hidden="true" className="h-px w-16 bg-border" />
+            <a
+              href="mailto:theafzalhussain786@gmail.com"
+              className="font-mono text-xs tracking-wide underline decoration-border underline-offset-4 transition-colors hover:text-primary"
+            >
+              theafzalhussain786@gmail.com
+            </a>
+          </div>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
-          className="mt-16 flex justify-center lg:mt-0"
-        >
-          <TechOrb />
-        </motion.div>
+        <dl className="stat-grid grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border/40 sm:grid-cols-4">
+          {STATS.map((s) => (
+            <div key={s.label}>
+              <dt className="font-mono text-[0.6rem] uppercase tracking-[0.13em] text-muted-foreground">
+                {s.label}
+              </dt>
+              <Counter value={s.value} suffix={s.suffix} />
+            </div>
+          ))}
+        </dl>
       </div>
     </section>
   )

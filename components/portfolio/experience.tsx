@@ -1,141 +1,96 @@
 'use client'
 
-import { motion } from 'framer-motion'
-import { Briefcase, Code2, GraduationCap, Rocket, ShieldCheck } from 'lucide-react'
+import { Reveal } from '@/components/ui/reveal'
 
-const timeline = [
+interface Entry {
+  year: string
+  title: string
+  org: string
+  body: string
+  now?: boolean
+}
+
+const TIMELINE: Entry[] = [
   {
-    icon: GraduationCap,
-    period: '2023',
-    title: 'Web Development Foundation',
-    org: 'World Class Skill Centre',
-    description:
-      'Six-month intensive program — HTML5, CSS3, JavaScript, Bootstrap 5 and project-based learning with a strong focus on responsive design.',
-    tags: ['HTML5', 'CSS3', 'JavaScript', 'Bootstrap 5'],
+    year: '2023',
+    title: 'Web development foundations',
+    org: 'World Class Skill Centre, Delhi',
+    body: 'Six-month intensive: HTML5, CSS3, JavaScript and responsive layout discipline. Where the fundamentals got fixed.',
   },
   {
-    icon: Code2,
-    period: '2023',
-    title: 'MERN Stack Development',
-    org: 'DUCAT',
-    description:
-      'Full-stack training across MongoDB, Express, React and Node.js — data modeling, REST APIs, authentication and first full-stack applications deployed to production.',
-    tags: ['MERN', 'REST APIs', 'MongoDB Atlas'],
+    year: '2023',
+    title: 'MERN stack development',
+    org: 'DUCAT, Delhi',
+    body: 'MongoDB, Express, React and Node — data modelling, REST APIs, authentication and the first full-stack deploys.',
   },
   {
-    icon: Briefcase,
-    period: '2024',
-    title: 'Front-End Web Development',
-    org: 'Mind Luster',
-    description:
-      'Advanced front-end engineering — React component architecture, state management, responsive UI systems and polished, animated interfaces.',
-    tags: ['React', 'UI Engineering', 'Responsive Design'],
+    year: '2024',
+    title: 'MCA — Computer Applications',
+    org: 'IGNOU, New Delhi · in progress',
+    body: 'Studying alongside full-time building, after a First Division BCA from Maharshi Dayanand University, Rohtak.',
   },
   {
-    icon: ShieldCheck,
-    period: '2025',
-    title: 'Cybersecurity & AI Foundations',
-    org: 'NIIT Foundation',
-    description:
-      'Security fundamentals for modern web applications — common attack vectors, safe API design, and an introduction to applied AI workflows.',
-    tags: ['Security', 'API Design', 'AI Basics'],
+    year: '2025',
+    title: 'Independent product work',
+    org: 'Self-directed · New Delhi',
+    body: 'World Explorer and The Chronicle shipped — typed APIs, caching strategy, bilingual UI and measurable request reduction.',
   },
   {
-    icon: Rocket,
-    period: '2026 — Present',
-    title: 'Independent MERN Development',
-    org: 'Self-driven · Open to opportunities',
-    description:
-      'Shipping production MERN and front-end applications end-to-end (eShopperr, MovieZone and more), with an AI-assisted workflow using GitHub Copilot. Currently open to full-time roles and freelance projects.',
-    tags: ['MERN', 'Next.js', 'GitHub Copilot'],
+    year: '2026',
+    title: 'Production scale, and looking for a team',
+    org: 'Open to frontend internships',
+    body: 'eShopper and MovieZone took me into payments, background workers, real-time state and PWA delivery. Saarthi took me into Python. Now I want code review and a product team around me.',
+    now: true,
   },
 ]
 
 export function Experience() {
   return (
-    <section id="experience" className="relative z-10 py-16 md:py-24">
-      <div className="mx-auto w-[min(72rem,calc(100%-2rem))]">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.6 }}
-          className="mb-12 flex flex-col items-center text-center md:mb-16"
-        >
-          <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-primary">
-            Experience
-          </span>
-          <h2 className="text-balance text-3xl font-bold tracking-tight md:text-4xl">
-            My <span className="text-primary">Journey</span>
-          </h2>
-          <p className="mt-4 max-w-2xl leading-relaxed text-muted-foreground">
-            A timeline of the training, certifications and shipped work that shaped my engineering
-            practice.
+    <section id="journey" className="relative z-10 border-t border-border py-20 md:py-28">
+      <div className="mx-auto w-[min(72rem,calc(100%-2rem))] md:w-[min(72rem,calc(100%-4rem))]">
+        <Reveal as="header" className="mb-10 max-w-[46rem]">
+          <p className="eyebrow mb-4">
+            <span aria-hidden="true">03</span> Journey
           </p>
-        </motion.div>
+          <h2 className="text-balance font-heading text-3xl font-bold tracking-tight md:text-4xl">
+            Foundations first, then shipping.
+          </h2>
+        </Reveal>
 
-        <div className="relative mx-auto max-w-4xl">
-          {/* Center line */}
-          <div
+        <ol className="relative">
+          <span
             aria-hidden="true"
-            className="absolute top-0 bottom-0 left-4 w-px bg-gradient-to-b from-primary/60 via-border to-transparent md:left-1/2"
+            className="absolute top-2 bottom-2 left-[5px] w-px bg-border"
           />
-
-          <ol className="flex flex-col gap-10">
-            {timeline.map((item, i) => {
-              const left = i % 2 === 0
-              return (
-                <li key={item.title} className="relative md:grid md:grid-cols-2 md:gap-12">
-                  {/* Node dot */}
-                  <span
-                    aria-hidden="true"
-                    className="absolute top-7 left-4 z-10 flex size-4 -translate-x-1/2 items-center justify-center md:left-1/2"
-                  >
-                    <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary/40" />
-                    <span className="relative inline-flex size-2.5 rounded-full bg-primary" />
-                  </span>
-
-                  {/* Card — alternates sides on desktop */}
-                  <motion.div
-                    initial={{ opacity: 0, x: left ? -32 : 32, y: 12 }}
-                    whileInView={{ opacity: 1, x: 0, y: 0 }}
-                    viewport={{ once: true, margin: '-60px' }}
-                    transition={{ duration: 0.55, delay: 0.05 }}
-                    className={`pl-12 md:pl-0 ${
-                      left ? 'md:col-start-1 md:pr-14' : 'md:col-start-2 md:pl-14'
-                    }`}
-                  >
-                    <div className="glass group rounded-3xl p-6 transition-shadow hover:shadow-[0_0_50px_-20px_var(--glow)]">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                          <item.icon className="size-5" aria-hidden="true" />
-                        </span>
-                        <span className="font-mono text-xs font-semibold tracking-widest text-accent">
-                          {item.period}
-                        </span>
-                      </div>
-                      <h3 className="mt-4 text-lg font-semibold">{item.title}</h3>
-                      <p className="mt-0.5 text-sm font-medium text-primary">{item.org}</p>
-                      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                        {item.description}
-                      </p>
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {item.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="rounded-full border border-primary/20 bg-primary/5 px-3 py-1 font-mono text-[11px] text-primary"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
-                </li>
-              )
-            })}
-          </ol>
-        </div>
+          {TIMELINE.map((e, i) => (
+            <Reveal
+              as="li"
+              key={`${e.year}-${e.title}`}
+              delay={i * 60}
+              className="relative pb-8 pl-8 last:pb-0 md:grid md:grid-cols-[90px_1fr] md:gap-6 md:pl-9"
+            >
+              <span
+                aria-hidden="true"
+                className={`absolute top-[7px] left-0 size-[11px] rounded-full border-[1.5px] ${
+                  e.now
+                    ? 'border-accent bg-accent'
+                    : 'border-border bg-background'
+                }`}
+                style={{ boxShadow: '0 0 0 4px var(--background)' }}
+              />
+              <span className="font-mono text-[0.64rem] tracking-[0.14em] text-primary md:pt-1">
+                {e.year}
+              </span>
+              <div>
+                <h3 className="mt-1 font-heading text-lg font-semibold md:mt-0">{e.title}</h3>
+                <p className="mb-2 font-mono text-[0.64rem] uppercase tracking-[0.1em] text-muted-foreground">
+                  {e.org}
+                </p>
+                <p className="max-w-[42rem] leading-relaxed text-muted-foreground">{e.body}</p>
+              </div>
+            </Reveal>
+          ))}
+        </ol>
       </div>
     </section>
   )

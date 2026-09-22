@@ -17,9 +17,9 @@ import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 
 const SITE_URL = 'https://www.afzalhussain.tech'
-const SITE_TITLE = 'Afzal Hussain — MERN Stack Developer'
+const SITE_TITLE = 'Afzal Hussain — Frontend Developer | React · Next.js · TypeScript'
 const SITE_DESCRIPTION =
-  'Portfolio of Afzal Hussain, a MERN stack developer building scalable, high-performance web applications with React, Node.js, Express, and MongoDB.'
+  'Frontend developer in New Delhi building production web apps with React, Next.js and TypeScript. Six shipped projects across the MERN stack, Redis, BullMQ and Python. Open to internships in India and remote.'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -30,10 +30,13 @@ export const metadata: Metadata = {
   description: SITE_DESCRIPTION,
   keywords: [
     'Afzal Hussain',
-    'MERN Stack Developer',
+    'Frontend Developer',
     'React Developer',
-    'Node.js Developer',
-    'Full Stack Developer',
+    'Next.js Developer',
+    'TypeScript Developer',
+    'MERN Stack Developer',
+    'Frontend Developer Intern',
+    'Web Developer New Delhi',
     'Portfolio',
   ],
   authors: [{ name: 'Afzal Hussain', url: 'https://github.com/theafzalhussain' }],
@@ -50,7 +53,7 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Afzal Hussain — MERN Stack Developer',
+        alt: 'Afzal Hussain — Frontend Developer',
       },
     ],
   },
