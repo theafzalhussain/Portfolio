@@ -70,13 +70,13 @@ const SKILLS: Skill[] = [
 
   // Frontend
   { name: 'React', cat: 'frontend', glyph: 'atom', color: '#22d3ee', proof: 'Component architecture, hooks' },
-  { name: 'Next.js', cat: 'frontend', glyph: 'layers', color: '#e7ecea', proof: 'App Router, SSR, route handlers' },
+  // { name: 'Next.js', cat: 'frontend', glyph: 'layers', color: '#e7ecea', proof: 'App Router, SSR, route handlers' },
   { name: 'Tailwind CSS', cat: 'frontend', glyph: 'waves', color: '#22d3ee', proof: 'Mobile-first, token-driven' },
   { name: 'Redux Toolkit', cat: 'frontend', glyph: 'stack', color: '#a78bfa', proof: 'eShopper store + Redux Saga' },
-  { name: 'TanStack Query', cat: 'frontend', glyph: 'plug', color: '#fb7185', proof: '~70% fewer requests' },
-  { name: 'SWR', cat: 'frontend', glyph: 'signal', color: '#e7ecea', proof: 'The Chronicle revalidation' },
+  // { name: 'TanStack Query', cat: 'frontend', glyph: 'plug', color: '#fb7185', proof: '~70% fewer requests' },
+  // { name: 'SWR', cat: 'frontend', glyph: 'signal', color: '#e7ecea', proof: 'The Chronicle revalidation' },
   { name: 'Framer Motion', cat: 'frontend', glyph: 'bolt', color: '#f472b6', proof: 'Purposeful interface motion' },
-  { name: 'Three.js / R3F', cat: 'frontend', glyph: 'rocket', color: '#34d399', proof: 'The WebGL hero on this page' },
+  // { name: 'Three.js / R3F', cat: 'frontend', glyph: 'rocket', color: '#34d399', proof: 'The WebGL hero on this page' },
   { name: 'Material UI', cat: 'frontend', glyph: 'layers', color: '#38bdf8', proof: 'eShopper admin + data grid' },
   { name: 'Bootstrap', cat: 'frontend', glyph: 'brush', color: '#a78bfa', proof: 'Early responsive builds' },
   { name: 'Recharts', cat: 'frontend', glyph: 'chart', color: '#fbbf24', proof: 'eShopper admin analytics' },
@@ -88,20 +88,20 @@ const SKILLS: Skill[] = [
   { name: 'REST APIs', cat: 'backend', glyph: 'plug', color: '#34d399', proof: '45+ endpoints shipped' },
   { name: 'Socket.IO', cat: 'backend', glyph: 'signal', color: '#a78bfa', proof: 'Live order state, server-derived rooms' },
   { name: 'BullMQ', cat: 'backend', glyph: 'stack', color: '#fb923c', proof: '4 queues: mail, refunds, reports, images' },
-  { name: 'JWT & bcrypt', cat: 'backend', glyph: 'key', color: '#fbbf24', proof: 'Auth and password hashing' },
+  // { name: 'JWT & bcrypt', cat: 'backend', glyph: 'key', color: '#fbbf24', proof: 'Auth and password hashing' },
   { name: 'Razorpay', cat: 'backend', glyph: 'card', color: '#3b82f6', proof: 'Server-side signature verification' },
   { name: 'Nodemailer', cat: 'backend', glyph: 'plug', color: '#22d3ee', proof: 'Transactional mail, HTML-escaped' },
-  { name: 'node-cron', cat: 'backend', glyph: 'clock', color: '#f472b6', proof: 'Idempotent auto-refund jobs' },
-  { name: 'Sharp', cat: 'backend', glyph: 'image', color: '#34d399', proof: 'WebP image proxy pipeline' },
+  // { name: 'node-cron', cat: 'backend', glyph: 'clock', color: '#f472b6', proof: 'Idempotent auto-refund jobs' },
+  // { name: 'Sharp', cat: 'backend', glyph: 'image', color: '#34d399', proof: 'WebP image proxy pipeline' },
   { name: 'Web Push', cat: 'backend', glyph: 'signal', color: '#4ade80', proof: 'MovieZone notifications' },
-  { name: 'Helmet & CORS', cat: 'backend', glyph: 'shield', color: '#fbbf24', proof: 'Headers, origin policy, rate limits' },
-  { name: 'Gemini API', cat: 'backend', glyph: 'brain', color: '#a78bfa', proof: 'eShopper catalogue chat' },
+  // { name: 'Helmet & CORS', cat: 'backend', glyph: 'shield', color: '#fbbf24', proof: 'Headers, origin policy, rate limits' },
+  // { name: 'Gemini API', cat: 'backend', glyph: 'brain', color: '#a78bfa', proof: 'eShopper catalogue chat' },
 
   // Database & cache
   { name: 'MongoDB', cat: 'data', glyph: 'db', color: '#34d399', proof: 'Atlas — 16 models in eShopper' },
   { name: 'Mongoose', cat: 'data', glyph: 'db', color: '#4ade80', proof: 'Schemas, indexes, cached connection' },
   { name: 'Redis / ioredis', cat: 'data', glyph: 'stack', color: '#ff6f61', proof: '~60% fewer repeat DB reads' },
-  { name: 'node-cache / LRU', cat: 'data', glyph: 'stack', color: '#fb923c', proof: 'TMDB proxy, 24h stale fallback' },
+  // { name: 'node-cache / LRU', cat: 'data', glyph: 'stack', color: '#fb923c', proof: 'TMDB proxy, 24h stale fallback' },
   { name: 'Cloudinary', cat: 'data', glyph: 'cloud', color: '#38bdf8', proof: 'Product media storage' },
   { name: 'Firebase', cat: 'data', glyph: 'cloud', color: '#fbbf24', proof: 'Auth + admin SDK in eShopper' },
 
@@ -111,9 +111,10 @@ const SKILLS: Skill[] = [
   { name: 'Render', cat: 'tools', glyph: 'cloud', color: '#22d3ee', proof: 'Express API via deploy hook' },
   { name: 'Sentry', cat: 'tools', glyph: 'shield', color: '#f472b6', proof: 'Error tracking, client + server' },
   { name: 'Datadog RUM', cat: 'tools', glyph: 'chart', color: '#a78bfa', proof: 'Real-user monitoring' },
-  { name: 'Prometheus', cat: 'tools', glyph: 'chart', color: '#fb923c', proof: 'prom-client metrics endpoint' },
-  { name: 'Lighthouse / CWV', cat: 'tools', glyph: 'shield', color: '#fbbf24', proof: '~30 automated perf checks' },
-  { name: 'Testing Library', cat: 'tools', glyph: 'shield', color: '#4ade80', proof: 'Component + server suites' },
+    { name: 'AI', cat: 'tools', glyph: 'brain', color: '#34d399', proof: 'Theoretical applications' },
+  // { name: 'Prometheus', cat: 'tools', glyph: 'chart', color: '#fb923c', proof: 'prom-client metrics endpoint' },
+  // { name: 'Lighthouse / CWV', cat: 'tools', glyph: 'shield', color: '#fbbf24', proof: '~30 automated perf checks' },
+  // { name: 'Testing Library', cat: 'tools', glyph: 'shield', color: '#4ade80', proof: 'Component + server suites' },
 ]
 
 const FILTERS: { id: Category | 'all'; label: string }[] = [
