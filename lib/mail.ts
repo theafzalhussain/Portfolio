@@ -317,7 +317,7 @@ function refHeaders() {
    1. Admin notification
    ───────────────────────────────────────────── */
 
-export async function sendAdminNotificationEmail(data: ContactMailPayload): Promise<void> {
+export async function sendAdminNotificationEmail(data: ContactMailPayload) {
   const t = getTransporter()
   const safeName = escapeHtml(data.name)
   const safeEmail = escapeHtml(data.email)
@@ -372,7 +372,7 @@ export async function sendAdminNotificationEmail(data: ContactMailPayload): Prom
       </tr>
     </table>`
 
-  await t.sendMail({
+  return t.sendMail({
     from: fromHeader(`${SITE_OWNER_NAME} · Portfolio`),
     to: ADMIN_EMAIL,
     replyTo: `"${data.name}" <${data.email}>`,
@@ -411,7 +411,7 @@ export async function sendAdminNotificationEmail(data: ContactMailPayload): Prom
    2. Confirmation to the visitor
    ───────────────────────────────────────────── */
 
-export async function sendUserConfirmationEmail(data: ContactMailPayload): Promise<void> {
+export async function sendUserConfirmationEmail(data: ContactMailPayload) {
   const t = getTransporter()
   const first = firstName(data.name)
   const safeFirst = escapeHtml(first)
@@ -479,7 +479,7 @@ export async function sendUserConfirmationEmail(data: ContactMailPayload): Promi
       </tr>
     </table>`
 
-  await t.sendMail({
+  return t.sendMail({
     from: fromHeader(SITE_OWNER_NAME),
     to: data.email,
     replyTo: ADMIN_EMAIL,
@@ -518,12 +518,24 @@ export async function sendUserConfirmationEmail(data: ContactMailPayload): Promi
   })
 }
 
+/** Addresses SMTP confirmed it took, flattened for the log line. */
+function accepted(info: { accepted?: Array<string | { address: string }> }): string {
+  const list = info.accepted ?? []
+  if (list.length === 0) return 'none'
+  return list.map((a) => (typeof a === 'string' ? a : a.address)).join(', ')
+}
+
 /**
  * Sends both emails concurrently. Neither failure throws — each is caught and
  * logged independently so one bad address (e.g. a mistyped sender email) never
  * blocks the other. The reason for the *admin* failure is returned, because
  * that is the one the caller needs in order to decide whether the submission
  * actually reached anyone.
+ *
+ * Both outcomes are logged with the address SMTP actually accepted. Without
+ * that line the visitor confirmation was invisible: it is fire-and-forget by
+ * design, so a silent success and a silent failure looked identical from the
+ * terminal, and the only way to tell them apart was to check an inbox.
  */
 export async function sendContactEmails(
   data: ContactMailPayload,
@@ -541,9 +553,18 @@ export async function sendContactEmails(
         ? adminResult.reason.message
         : String(adminResult.reason)
     console.error('[contact] Failed to send admin notification email:', adminResult.reason)
+  } else {
+    console.log(
+      `[contact] Admin notification accepted by SMTP for: ${accepted(adminResult.value)}`,
+    )
   }
+
   if (userResult.status === 'rejected') {
     console.error('[contact] Failed to send user confirmation email:', userResult.reason)
+  } else {
+    console.log(
+      `[contact] Visitor confirmation accepted by SMTP for: ${accepted(userResult.value)}`,
+    )
   }
 
   return {
