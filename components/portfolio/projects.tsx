@@ -37,7 +37,7 @@ const PROJECTS: Project[] = [
     year: '2026',
     tags: ['fullstack', 'backend', 'frontend'],
     featured: true,
-    image: '/images/eshopper.png',
+    image: '/images/eshopperr.png',
     live: 'https://eshopperr.me',
     code: 'https://github.com/theafzalhussain/eshopper',
     summary:
@@ -79,7 +79,7 @@ const PROJECTS: Project[] = [
     type: 'Installable PWA · performance',
     year: '2026',
     tags: ['pwa', 'frontend', 'backend'],
-    image: '/images/moviezone.png',
+    image: '/images/moviezone1.png',
     live: 'https://moviezone.dev',
     code: 'https://github.com/theafzalhussain/Moviezonne',
     summary:
@@ -120,7 +120,7 @@ const PROJECTS: Project[] = [
     type: 'Bilingual news application',
     year: '2025',
     tags: ['frontend'],
-    image: '/images/news.png',
+    image: '/images/newweb.png',
     live: 'https://mynews-web.vercel.app',
     code: 'https://github.com/theafzalhussain/News-Web',
     summary:
@@ -192,7 +192,7 @@ const PROJECTS: Project[] = [
     type: 'Next.js site with contact pipeline',
     year: '2026',
     tags: ['frontend', 'fullstack'],
-    image: '/images/afzalavatar.png',
+    image: '/images/portfolio.png',
     live: 'https://www.afzalhussain.tech',
     code: 'https://github.com/theafzalhussain/Portfolio',
     summary:
