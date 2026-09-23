@@ -14,6 +14,17 @@ import { Reveal } from '@/components/ui/reveal'
 const EMAIL = 'theafzalhussain786@gmail.com'
 const MAX_MESSAGE = 1000
 
+/**
+ * Shared field styling.
+ *
+ * `text-base` on mobile is not cosmetic: iOS Safari auto-zooms the viewport
+ * whenever a focused input's font-size is below 16px, and the previous
+ * 0.92rem (≈14.7px) triggered it on every tap — the page jumped in, and the
+ * user had to pinch back out to see the rest of the form.
+ */
+const FIELD =
+  'w-full rounded-xl border border-border bg-background px-3.5 py-3 text-base outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground/70 focus:border-primary focus:ring-[3px] focus:ring-primary/25 sm:py-2.5 sm:text-[0.92rem]'
+
 const CHANNELS = [
   { label: 'Email', value: EMAIL, href: `mailto:${EMAIL}` },
   { label: 'Phone / WhatsApp', value: '+91 84478 59784', href: 'https://wa.me/918447859784' },
@@ -114,32 +125,35 @@ export function Contact() {
   }
 
   return (
-    <section id="contact" className="relative z-10 border-t border-border py-20 md:py-28">
-      <div className="mx-auto grid w-[min(72rem,calc(100%-2rem))] gap-12 md:w-[min(72rem,calc(100%-4rem))] lg:grid-cols-2 lg:gap-16">
+    <section id="contact" className="section-y relative z-10 border-t border-border">
+      <div className="shell grid gap-10 md:gap-12 lg:grid-cols-2 lg:gap-16">
         <Reveal>
           <p className="eyebrow mb-4">
             <span aria-hidden="true">05</span> Contact
           </p>
-          <h2 className="text-balance font-heading text-3xl font-bold tracking-tight md:text-4xl">
+          <h2 className="text-balance font-heading text-[1.65rem] font-bold tracking-tight sm:text-3xl md:text-4xl">
             Let&apos;s talk about your frontend roster.
           </h2>
-          <p className="mt-4 max-w-[34rem] leading-relaxed text-muted-foreground">
+          <p className="mt-4 max-w-[34rem] text-[0.95rem] leading-relaxed text-muted-foreground sm:text-base">
             Send a role description, a take-home, or a 20-minute call invite. Messages are stored
             server-side and mailed to me, so nothing gets lost.
           </p>
 
           <dl className="mt-8 grid gap-px overflow-hidden rounded-2xl border border-border bg-border/40">
             {CHANNELS.map((c) => (
-              <div key={c.label} className="grid gap-0.5 bg-card/70 p-4 backdrop-blur-sm">
+              <div
+                key={c.label}
+                className="grid gap-0.5 bg-card/80 p-4 md:bg-card/70 md:backdrop-blur-sm"
+              >
                 <dt className="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-foreground">
                   {c.label}
                 </dt>
-                <dd>
+                <dd className="min-w-0">
                   <a
                     href={c.href}
                     target={c.href.startsWith('http') ? '_blank' : undefined}
                     rel={c.href.startsWith('http') ? 'noreferrer noopener' : undefined}
-                    className="text-[0.92rem] transition-colors hover:text-primary"
+                    className="block truncate text-[0.88rem] transition-colors hover:text-primary sm:text-[0.92rem]"
                   >
                     {c.value}
                   </a>
@@ -148,7 +162,7 @@ export function Contact() {
             ))}
           </dl>
 
-          <div className="mt-6 flex flex-wrap items-center gap-3">
+          <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3">
             <button
               type="button"
               onClick={copyEmail}
@@ -158,7 +172,7 @@ export function Contact() {
               {copied ? 'Copied' : 'Copy email'}
             </button>
 
-            <div className="flex items-center gap-3 text-muted-foreground">
+            <div className="flex items-center gap-4 text-muted-foreground">
               {SOCIALS.map(({ Icon, href, label }) => (
                 <a
                   key={label}
@@ -166,7 +180,7 @@ export function Contact() {
                   target="_blank"
                   rel="noreferrer noopener"
                   aria-label={label}
-                  className="transition-all hover:-translate-y-0.5 hover:text-primary"
+                  className="grid size-9 place-items-center transition-all hover:-translate-y-0.5 hover:text-primary"
                 >
                   <Icon className="size-5" />
                 </a>
@@ -178,7 +192,7 @@ export function Contact() {
         <Reveal delay={100}>
           <form
             onSubmit={onSubmit}
-            className="grid gap-3.5 rounded-3xl border border-border bg-card/85 p-5 backdrop-blur-md md:p-7"
+            className="relative grid gap-3.5 rounded-2xl border border-border bg-card/90 p-4 sm:rounded-3xl sm:p-5 md:bg-card/85 md:p-7 md:backdrop-blur-md"
           >
             <div className="grid gap-3.5 sm:grid-cols-2">
               <label className="grid gap-1.5">
@@ -192,7 +206,7 @@ export function Contact() {
                   maxLength={100}
                   autoComplete="name"
                   placeholder="Priya Sharma"
-                  className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-[0.92rem] outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground/70 focus:border-primary focus:ring-[3px] focus:ring-primary/25"
+                  className={FIELD}
                 />
               </label>
               <label className="grid gap-1.5">
@@ -206,7 +220,7 @@ export function Contact() {
                   maxLength={200}
                   autoComplete="email"
                   placeholder="you@company.com"
-                  className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-[0.92rem] outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground/70 focus:border-primary focus:ring-[3px] focus:ring-primary/25"
+                  className={FIELD}
                 />
               </label>
             </div>
@@ -219,12 +233,12 @@ export function Contact() {
                 name="subject"
                 maxLength={150}
                 placeholder="Frontend Intern — Acme Technologies"
-                className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-[0.92rem] outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground/70 focus:border-primary focus:ring-[3px] focus:ring-primary/25"
+                className={FIELD}
               />
             </label>
 
             <label className="grid gap-1.5">
-              <span className="flex items-center justify-between font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted-foreground">
+              <span className="flex items-center justify-between gap-2 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted-foreground">
                 Message
                 <span>
                   {message.length}/{MAX_MESSAGE}
@@ -239,12 +253,14 @@ export function Contact() {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Tell me about the team, the stack and the timeline."
-                className="w-full resize-y rounded-xl border border-border bg-background px-3.5 py-2.5 text-[0.92rem] outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground/70 focus:border-primary focus:ring-[3px] focus:ring-primary/25"
+                className={`${FIELD} resize-y`}
               />
             </label>
 
-            {/* Honeypot — hidden from humans, filled by bots. */}
-            <div className="absolute -left-[9999px]" aria-hidden="true">
+            {/* Honeypot — hidden from humans, filled by bots. The form is
+                `relative` so this is positioned against the form rather than
+                the section, which is what kept it reliably off-screen. */}
+            <div className="absolute -left-[9999px] top-0" aria-hidden="true">
               <label>
                 Website
                 <input name="website" tabIndex={-1} autoComplete="off" />
@@ -254,7 +270,7 @@ export function Contact() {
             <button
               type="submit"
               disabled={sending}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 sm:py-3"
             >
               {sending ? 'Sending…' : 'Send message'}
               {!sending && <Send className="size-4" />}

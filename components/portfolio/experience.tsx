@@ -46,13 +46,13 @@ const TIMELINE: Entry[] = [
 
 export function Experience() {
   return (
-    <section id="journey" className="relative z-10 border-t border-border py-20 md:py-28">
-      <div className="mx-auto w-[min(72rem,calc(100%-2rem))] md:w-[min(72rem,calc(100%-4rem))]">
+    <section id="journey" className="section-y relative z-10 border-t border-border">
+      <div className="shell">
         <Reveal as="header" className="mb-10 max-w-[46rem]">
           <p className="eyebrow mb-4">
             <span aria-hidden="true">03</span> Journey
           </p>
-          <h2 className="text-balance font-heading text-3xl font-bold tracking-tight md:text-4xl">
+          <h2 className="text-balance font-heading text-[1.65rem] font-bold tracking-tight sm:text-3xl md:text-4xl">
             Foundations first, then shipping.
           </h2>
         </Reveal>
@@ -67,7 +67,7 @@ export function Experience() {
               as="li"
               key={`${e.year}-${e.title}`}
               delay={i * 60}
-              className="relative pb-8 pl-8 last:pb-0 md:grid md:grid-cols-[90px_1fr] md:gap-6 md:pl-9"
+              className="relative pb-8 pl-7 last:pb-0 sm:pl-8 md:grid md:grid-cols-[90px_1fr] md:gap-6 md:pl-9"
             >
               <span
                 aria-hidden="true"
@@ -82,11 +82,15 @@ export function Experience() {
                 {e.year}
               </span>
               <div>
-                <h3 className="mt-1 font-heading text-lg font-semibold md:mt-0">{e.title}</h3>
-                <p className="mb-2 font-mono text-[0.64rem] uppercase tracking-[0.1em] text-muted-foreground">
+                <h3 className="mt-1 font-heading text-base font-semibold sm:text-lg md:mt-0">
+                  {e.title}
+                </h3>
+                <p className="mb-2 font-mono text-[0.6rem] uppercase tracking-[0.1em] text-muted-foreground sm:text-[0.64rem]">
                   {e.org}
                 </p>
-                <p className="max-w-[42rem] leading-relaxed text-muted-foreground">{e.body}</p>
+                <p className="max-w-[42rem] text-[0.92rem] leading-relaxed text-muted-foreground sm:text-base">
+                  {e.body}
+                </p>
               </div>
             </Reveal>
           ))}

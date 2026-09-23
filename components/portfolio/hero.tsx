@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { ArrowRight, Mail } from 'lucide-react'
 import { GithubIcon, LinkedinIcon } from '@/components/portfolio/brand-icons'
+import { useActive, useDeviceTier, useIdleReady, useReducedMotion } from '@/lib/device'
 
 // three.js cannot render on the server, and a WebGL failure must never take
 // the hero down — so the scene is client-only and purely decorative.
@@ -26,15 +27,22 @@ const STATS = [
   { label: 'Reusable components', value: 60, suffix: '+' },
 ]
 
-function Typewriter() {
-  const [text, setText] = useState('')
-  const state = useRef({ word: 0, char: 0, deleting: false })
+/**
+ * Cycling role text.
+ *
+ * `active` matters more than it looks: this component sets state every 34–72ms
+ * forever. Left unguarded it kept re-rendering — and kept the tab awake —
+ * while the visitor was reading a case study five sections away.
+ */
+function Typewriter({ active }: { active: boolean }) {
+  // Seeded with the first role fully typed, so the server HTML and the first
+  // paint both show real text instead of an empty line that pops in.
+  const [text, setText] = useState(ROLES[0])
+  const state = useRef({ word: 0, char: ROLES[0].length, deleting: false })
+  const reduced = useReducedMotion()
 
   useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setText(ROLES[0])
-      return
-    }
+    if (reduced || !active) return
 
     let timer: ReturnType<typeof setTimeout>
 
@@ -62,14 +70,14 @@ function Typewriter() {
 
     tick()
     return () => clearTimeout(timer)
-  }, [])
+  }, [active, reduced])
 
   return (
     <>
       <span className="text-primary">{text}</span>
       <span
         aria-hidden="true"
-        className="ml-[-0.2rem] inline-block h-[1.05em] w-[8px] translate-y-[2px] bg-primary animate-caret-blink"
+        className="ml-[-0.2rem] inline-block h-[1.05em] w-[7px] translate-y-[2px] bg-primary animate-caret-blink sm:w-[8px]"
       />
     </>
   )
@@ -124,7 +132,7 @@ function Counter({ value, suffix }: { value: number; suffix: string }) {
   return (
     <dd
       ref={ref as React.RefObject<HTMLElement>}
-      className="mt-1.5 font-heading text-3xl leading-none text-foreground md:text-4xl"
+      className="mt-1.5 font-heading text-[1.65rem] leading-none text-foreground sm:text-3xl md:text-4xl"
     >
       {display}
       {suffix}
@@ -133,13 +141,30 @@ function Counter({ value, suffix }: { value: number; suffix: string }) {
 }
 
 export function Hero() {
+  const sectionRef = useRef<HTMLElement>(null)
+  const tier = useDeviceTier()
+  const reduced = useReducedMotion()
+
+  // Two independent gates on the 3D scene:
+  //   `idle`   — never let three.js compete with the first paint or the LCP
+  //              text. The bundle and the WebGL context are both deferred
+  //              until the browser has nothing better to do.
+  //   `active` — the hero is on (or near) screen and the tab is visible.
+  const idle = useIdleReady()
+  const active = useActive(sectionRef, '300px 0px')
+  const showScene = idle && !reduced
+
   return (
     <section
+      ref={sectionRef}
       id="hero"
       data-hero-stage
-      className="relative isolate flex min-h-[100svh] flex-col justify-end overflow-hidden pt-28 pb-8 md:pt-32"
+      className="relative isolate flex min-h-[100svh] flex-col justify-end overflow-hidden pt-24 pb-10 sm:pt-28 md:pt-32 md:pb-12"
     >
-      <HeroScene />
+      {/* Static gradient stand-in. It is the first paint, and it stays as the
+          permanent visual under prefers-reduced-motion. */}
+      {!showScene && <div aria-hidden="true" className="hero-orb z-[1]" />}
+      {showScene && <HeroScene tier={tier} active={active} reduced={reduced} />}
 
       {/* Vignette: keeps the copy readable over the scene without hiding it. */}
       <div
@@ -151,25 +176,27 @@ export function Hero() {
         }}
       />
 
-      <div className="relative z-[3] mx-auto grid w-[min(72rem,calc(100%-2rem))] gap-12 md:w-[min(72rem,calc(100%-4rem))]">
+      <div className="shell relative z-[3] grid gap-8 sm:gap-10 md:gap-12">
         <div data-hero-copy className="max-w-[44rem]">
-          <p className="glass mb-6 inline-flex items-center gap-2 rounded-full px-3 py-1.5 font-mono text-[0.66rem] uppercase tracking-[0.13em] text-muted-foreground">
+          <p className="glass mb-5 inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-full px-3 py-1.5 font-mono text-[0.6rem] leading-relaxed uppercase tracking-[0.1em] text-muted-foreground sm:mb-6 sm:text-[0.66rem] sm:tracking-[0.13em]">
             <span
               aria-hidden="true"
-              className="size-1.5 rounded-full bg-accent animate-pulse-ring"
+              className="size-1.5 shrink-0 rounded-full bg-accent animate-pulse-ring"
             />
             Available for internships · Delhi NCR &amp; Remote
           </p>
 
           {/* The name is the h1: it is the personal brand and the strongest
-              SEO signal on the page. The pitch line sits under it. */}
-          <h1 className="font-heading text-[2.75rem] leading-[1.02] font-bold tracking-[-0.03em] sm:text-6xl md:text-7xl lg:text-[5.25rem]">
+              SEO signal on the page. The pitch line sits under it.
+              Fluid size, because "Afzal Hussain" at a fixed 2.75rem was
+              wider than a 320px viewport. */}
+          <h1 className="font-heading text-[clamp(2.2rem,11.5vw,3rem)] leading-[1.02] font-bold tracking-[-0.03em] sm:text-6xl md:text-7xl lg:text-[5.25rem]">
             Afzal Hussain
           </h1>
 
           <div className="mt-4 flex items-center gap-3">
-            <span aria-hidden="true" className="h-px w-10 bg-primary sm:w-14" />
-            <p className="font-mono text-[0.78rem] tracking-[0.06em] text-primary sm:text-sm">
+            <span aria-hidden="true" className="h-px w-8 shrink-0 bg-primary sm:w-14" />
+            <p className="font-mono text-[0.74rem] tracking-[0.06em] text-primary sm:text-sm">
               Frontend Developer
               <span className="hidden text-muted-foreground sm:inline">
                 {' '}· React · Next.js · TypeScript
@@ -177,42 +204,46 @@ export function Hero() {
             </p>
           </div>
 
-          <p className="mt-6 max-w-[30rem] text-balance font-heading text-xl leading-snug font-semibold tracking-tight sm:text-2xl md:max-w-[34rem] md:text-3xl">
+          <p className="mt-5 max-w-[30rem] text-balance font-heading text-[1.35rem] leading-snug font-semibold tracking-tight sm:text-2xl md:mt-6 md:max-w-[34rem] md:text-3xl">
             I build <span className="text-primary">production</span> interfaces for the modern
             web.
           </p>
 
-          <p className="mt-5 flex flex-wrap items-center gap-2 font-mono text-[0.8rem] sm:text-sm">
+          <p className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[0.75rem] sm:text-sm">
             <span className="text-muted-foreground">const role =</span>
             <span aria-live="polite">
-              <Typewriter />
+              <Typewriter active={active} />
             </span>
           </p>
 
-          <p className="mt-5 max-w-[34rem] leading-relaxed text-muted-foreground md:text-lg">
+          <p className="mt-5 max-w-[34rem] text-[0.95rem] leading-relaxed text-muted-foreground sm:text-base md:text-lg">
             Based in New Delhi, working across React, Next.js, TypeScript and the MERN stack.
             Five deployed applications — including a payments-ready commerce platform with
             Redis caching, background workers and real-time order state.
           </p>
 
-          <div className="mt-8 flex flex-wrap gap-3">
+          {/* Full-bleed buttons on a phone: a 44px-tall target that spans the
+              column is far easier to hit than two shrink-wrapped pills. */}
+          <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
             <a
               href="#work"
-              className="group inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5 active:scale-95"
+              className="group inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5 active:scale-[0.98] sm:justify-start sm:py-3"
             >
               View selected work
               <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
             </a>
             <a
               href="#contact"
-              className="inline-flex items-center gap-2 rounded-full border border-border px-5 py-3 text-sm font-semibold transition-all hover:-translate-y-0.5 hover:border-primary hover:text-primary"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-border px-5 py-3.5 text-sm font-semibold transition-all hover:-translate-y-0.5 hover:border-primary hover:text-primary active:scale-[0.98] sm:justify-start sm:py-3"
             >
               <Mail className="size-4" />
               Start a conversation
             </a>
           </div>
 
-          <div className="mt-8 flex items-center gap-4 text-muted-foreground">
+          {/* Wraps instead of overflowing: the email alone is wider than the
+              icon row plus rule on a 320px screen. */}
+          <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-3 text-muted-foreground sm:mt-8">
             <a
               href="https://github.com/theafzalhussain"
               target="_blank"
@@ -231,10 +262,10 @@ export function Hero() {
             >
               <LinkedinIcon className="size-5" />
             </a>
-            <span aria-hidden="true" className="h-px w-16 bg-border" />
+            <span aria-hidden="true" className="hidden h-px w-16 bg-border sm:block" />
             <a
               href="mailto:theafzalhussain786@gmail.com"
-              className="font-mono text-xs tracking-wide underline decoration-border underline-offset-4 transition-colors hover:text-primary"
+              className="font-mono text-[0.7rem] tracking-wide underline decoration-border underline-offset-4 transition-colors hover:text-primary sm:text-xs"
             >
               theafzalhussain786@gmail.com
             </a>
@@ -244,7 +275,7 @@ export function Hero() {
         <dl className="stat-grid grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border/40 sm:grid-cols-4">
           {STATS.map((s) => (
             <div key={s.label}>
-              <dt className="font-mono text-[0.6rem] uppercase tracking-[0.13em] text-muted-foreground">
+              <dt className="font-mono text-[0.56rem] uppercase tracking-[0.1em] text-muted-foreground sm:text-[0.6rem] sm:tracking-[0.13em]">
                 {s.label}
               </dt>
               <Counter value={s.value} suffix={s.suffix} />

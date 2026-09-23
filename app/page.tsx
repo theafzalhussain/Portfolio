@@ -34,10 +34,14 @@ export default function Page() {
       <Toaster
         position="bottom-right"
         toastOptions={{
+          // Theme tokens, not hard-coded colours: the old literal dark values
+          // left a dark toast floating on the light theme.
           style: {
-            background: 'oklch(0.17 0.014 252)',
-            color: 'oklch(0.95 0.005 250)',
-            border: '1px solid oklch(1 0 0 / 12%)',
+            background: 'var(--card)',
+            color: 'var(--card-foreground)',
+            border: '1px solid var(--border)',
+            fontSize: '0.9rem',
+            maxWidth: 'min(22rem, calc(100vw - 2rem))',
           },
         }}
       />

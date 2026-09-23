@@ -129,18 +129,71 @@
   html {
     scroll-behavior: smooth;
     overflow-x: hidden;
+    /* The navbar is fixed, so an anchor jump used to land with the section
+       heading hidden underneath it. */
+    scroll-padding-top: 4.75rem;
+    /* Stop iOS/Android from inflating text in landscape. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
   body {
     @apply bg-background text-foreground font-sans;
     overflow-x: hidden;
     width: 100%;
+    /* A long word or URL must wrap rather than widen the page — this is the
+       root cause of most phantom horizontal scrollbars on phones. */
+    overflow-wrap: break-word;
   }
   h1,
   h2,
   h3,
   h4 {
     font-family: var(--font-heading);
+    /* Headings are the one place where a hard break is unacceptable. */
+    overflow-wrap: break-word;
   }
+  img,
+  svg,
+  video,
+  canvas {
+    max-width: 100%;
+  }
+  /* Tapping a button on a touch device should not paint a grey box over it. */
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* Anything interactive keeps a visible keyboard focus ring. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+/* ---------- Shared page shell ----------
+   One place that owns the horizontal gutter, so every section lines up and
+   the gutter can grow with the viewport instead of being 1rem everywhere. */
+
+.shell {
+  width: min(72rem, 100% - 2rem);
+  margin-inline: auto;
+}
+
+@media (min-width: 640px) {
+  .shell {
+    width: min(72rem, 100% - 3rem);
+  }
+}
+
+@media (min-width: 768px) {
+  .shell {
+    width: min(72rem, 100% - 4rem);
+  }
+}
+
+/* Vertical rhythm for a section band, fluid between phone and desktop. */
+.section-y {
+  padding-block: clamp(3.5rem, 9vw, 7rem);
 }
 
 /* ---------- Custom keyframes ---------- */
@@ -256,8 +309,10 @@
   animation: marquee 36s linear infinite;
 }
 
-.animate-marquee:hover {
-  animation-play-state: paused;
+@media (hover: hover) and (pointer: fine) {
+  .animate-marquee:hover {
+    animation-play-state: paused;
+  }
 }
 
 /* ---------- Polish: selection, scrollbar ---------- */
@@ -392,7 +447,11 @@
   z-index: -2;
   pointer-events: none;
   overflow: hidden;
-  filter: blur(90px);
+  /* No `filter: blur()` here on purpose. The three blobs are already
+     radial-gradients that fade to transparent, so the blur was buying almost
+     nothing visually while forcing the compositor to re-blur a viewport-sized
+     layer on every animation frame — one of the most expensive things this
+     page used to do, and the first thing to stutter on a phone. */
   opacity: 0.55;
 }
 
@@ -416,7 +475,12 @@
   height: 46vw;
   top: 4%;
   left: 52%;
-  background: radial-gradient(circle, color-mix(in oklch, var(--primary) 55%, transparent), transparent 68%);
+  background: radial-gradient(
+    circle,
+    color-mix(in oklch, var(--primary) 55%, transparent) 0%,
+    color-mix(in oklch, var(--primary) 22%, transparent) 38%,
+    transparent 72%
+  );
   animation: aurora-a 34s ease-in-out infinite;
 }
 
@@ -425,7 +489,12 @@
   height: 40vw;
   top: 38%;
   left: 8%;
-  background: radial-gradient(circle, color-mix(in oklch, var(--accent) 48%, transparent), transparent 68%);
+  background: radial-gradient(
+    circle,
+    color-mix(in oklch, var(--accent) 48%, transparent) 0%,
+    color-mix(in oklch, var(--accent) 19%, transparent) 38%,
+    transparent 72%
+  );
   animation: aurora-b 42s ease-in-out infinite;
 }
 
@@ -434,7 +503,12 @@
   height: 34vw;
   top: 66%;
   left: 62%;
-  background: radial-gradient(circle, color-mix(in oklch, var(--primary) 40%, transparent), transparent 70%);
+  background: radial-gradient(
+    circle,
+    color-mix(in oklch, var(--primary) 40%, transparent) 0%,
+    color-mix(in oklch, var(--primary) 16%, transparent) 38%,
+    transparent 74%
+  );
   animation: aurora-c 38s ease-in-out infinite;
 }
 
@@ -478,10 +552,14 @@
     opacity 0.3s;
 }
 
-.skill-card:hover {
-  transform: translateY(-3px);
-  border-color: color-mix(in oklch, var(--sc) 55%, var(--border));
-  background: color-mix(in oklch, var(--card) 88%, transparent);
+/* Hover effects only where hover exists. On touch, a `:hover` rule sticks
+   after the tap and leaves the card visually lifted until you scroll away. */
+@media (hover: hover) and (pointer: fine) {
+  .skill-card:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(in oklch, var(--sc) 55%, var(--border));
+    background: color-mix(in oklch, var(--card) 88%, transparent);
+  }
 }
 
 .skill-icon {
@@ -512,7 +590,9 @@
   font-size: 0.68rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  padding: 0.45rem 0.85rem;
+  /* 0.62rem block padding puts the hit area at ~40px tall, which is a
+     reliable thumb target. The old 0.45rem gave ~28px. */
+  padding: 0.62rem 0.95rem;
   border-radius: 999px;
   border: 1px solid var(--border);
   background: transparent;
@@ -521,9 +601,17 @@
   transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.chip:hover {
-  border-color: var(--primary);
-  color: var(--primary);
+@media (min-width: 768px) {
+  .chip {
+    padding: 0.48rem 0.9rem;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .chip:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
 }
 
 .chip[data-active='true'] {
@@ -558,7 +646,13 @@
   background: color-mix(in oklch, var(--card) 70%, transparent);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  padding: 1.05rem 1.1rem;
+  padding: 0.85rem 0.9rem;
+}
+
+@media (min-width: 640px) {
+  .stat-grid > div {
+    padding: 1.05rem 1.1rem;
+  }
 }
 
 /* ---------- Project media ---------- */
@@ -569,8 +663,10 @@
     filter 0.5s;
 }
 
-.group\/proj:hover .proj-shot img {
-  transform: scale(1.045);
+@media (hover: hover) and (pointer: fine) {
+  .group\/proj:hover .proj-shot img {
+    transform: scale(1.045);
+  }
 }
 
 /* ---------- Case study modal ---------- */
@@ -621,5 +717,152 @@
   }
   .modal-card {
     animation: none;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   Hero stage
+   ═══════════════════════════════════════════════════════ */
+
+/* The WebGL canvas is pure decoration: nothing in the scene is clickable and
+   nothing raycasts. Taking it out of hit-testing means R3F's pointer handling
+   never runs, taps and swipes that start over the orb go straight to the page
+   underneath, and the canvas can never swallow a CTA press. */
+.hero-canvas,
+.hero-canvas canvas {
+  pointer-events: none !important;
+  touch-action: auto !important;
+}
+
+/* On phones and tablets the orb sits behind the copy rather than beside it,
+   so it is dimmed to keep the headline at full contrast. */
+.hero-canvas {
+  opacity: 0.5;
+}
+
+@media (min-width: 768px) {
+  .hero-canvas {
+    opacity: 0.7;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-canvas {
+    opacity: 1;
+  }
+}
+
+/**
+ * Static stand-in for the 3D scene: shown under `prefers-reduced-motion`,
+ * and as the first paint before the WebGL scene is mounted on idle. Pure
+ * gradients, no animation, no JavaScript.
+ */
+.hero-orb {
+  position: absolute;
+  top: 12%;
+  left: 50%;
+  width: min(30rem, 78vw);
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.55;
+  background:
+    radial-gradient(circle at 38% 32%, color-mix(in oklch, var(--accent) 55%, transparent) 0%, transparent 58%),
+    radial-gradient(circle at 62% 68%, color-mix(in oklch, var(--primary) 42%, transparent) 0%, transparent 62%);
+}
+
+.hero-orb::after {
+  content: '';
+  position: absolute;
+  inset: 14%;
+  border-radius: 50%;
+  border: 1px solid color-mix(in oklch, var(--primary) 30%, transparent);
+}
+
+@media (min-width: 1024px) {
+  .hero-orb {
+    top: 50%;
+    left: auto;
+    right: 4%;
+    width: min(34rem, 40vw);
+    transform: translateY(-50%);
+    opacity: 0.7;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   Mobile cost controls
+
+   Stacked `backdrop-filter` is the most expensive thing a phone GPU is asked
+   to do here: the navbar, the marquee, five project cards, the stat strip,
+   every skill card and the footer each blur whatever is behind them, over a
+   moving canvas background. Below the tablet breakpoint the blurs are
+   dropped and the surfaces are made more opaque instead — visually very
+   close, dramatically cheaper, and it removes the scroll jank on mid-range
+   Android devices.
+
+   These rules sit outside @layer on purpose so they win against the
+   Tailwind utility layer without !important.
+   ═══════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+  .glass,
+  .glass-strong,
+  .skill-card,
+  .stat-grid > div,
+  .orbit-badge,
+  [class*='backdrop-blur'] {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .glass {
+    background: color-mix(in oklch, var(--card) 88%, transparent);
+  }
+
+  .glass-strong {
+    background: color-mix(in oklch, var(--card) 95%, transparent);
+  }
+
+  .skill-card {
+    background: color-mix(in oklch, var(--card) 88%, transparent);
+  }
+
+  .stat-grid > div {
+    background: color-mix(in oklch, var(--card) 92%, transparent);
+  }
+
+  /* Third aurora blob is off-screen furniture on a phone; two is plenty. */
+  .aurora span:nth-child(3) {
+    display: none;
+  }
+
+  .aurora {
+    opacity: 0.42;
+  }
+}
+
+/* Slower drift on small screens: fewer composited frames for a background
+   detail nobody is looking at directly. */
+@media (max-width: 480px) {
+  .aurora span {
+    animation-duration: 60s;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   Reduced motion — final say
+   ═══════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

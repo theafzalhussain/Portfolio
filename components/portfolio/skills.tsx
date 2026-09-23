@@ -147,16 +147,16 @@ export function Skills() {
   }
 
   return (
-    <section id="stack" className="relative z-10 border-t border-border py-20 md:py-28">
-      <div className="mx-auto w-[min(72rem,calc(100%-2rem))] md:w-[min(72rem,calc(100%-4rem))]">
+    <section id="stack" className="section-y relative z-10 border-t border-border">
+      <div className="shell">
         <Reveal as="header" className="mb-8 max-w-[46rem]">
           <p className="eyebrow mb-4">
             <span aria-hidden="true">02</span> Technical expertise
           </p>
-          <h2 className="text-balance font-heading text-3xl font-bold tracking-tight md:text-4xl">
+          <h2 className="text-balance font-heading text-[1.65rem] font-bold tracking-tight sm:text-3xl md:text-4xl">
             The full stack, not just the front of it.
           </h2>
-          <p className="mt-4 leading-relaxed text-muted-foreground">
+          <p className="mt-4 text-[0.95rem] leading-relaxed text-muted-foreground sm:text-base">
             {SKILLS.length} technologies across {counts.language} languages, {counts.frontend}{' '}
             frontend libraries, {counts.backend} backend tools, {counts.data} data layers and{' '}
             {counts.tools} DevOps services. Each card says where it actually shipped.
@@ -178,7 +178,9 @@ export function Skills() {
           ))}
         </Reveal>
 
-        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {/* Two columns land from 400px up: a single full-width card per row
+            wastes most of a phone screen on empty space beside short labels. */}
+        <div className="grid grid-cols-1 gap-2.5 min-[400px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {visible.map((s) => (
             <article
               key={s.name}
@@ -199,9 +201,9 @@ export function Skills() {
           ))}
         </div>
 
-        <Reveal className="mt-10 rounded-2xl border border-border p-6 md:p-7" delay={120}>
+        <Reveal className="mt-10 rounded-2xl border border-border p-5 sm:p-6 md:p-7" delay={120}>
           <h3 className="font-heading text-lg font-semibold">Training &amp; certifications</h3>
-          <ul className="mt-4 grid gap-4 sm:grid-cols-3">
+          <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
               ['MERN Stack Development', 'DUCAT, Delhi · 2023'],
               ['Web Development — 6 month program', 'World Class Skill Centre, Delhi · 2023'],

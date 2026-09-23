@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { useTheme } from '@/components/theme-provider'
+import { detectDeviceTier, hasFinePointer, type DeviceTier } from '@/lib/device'
 
 interface Node {
   x: number
@@ -67,26 +68,56 @@ const LIGHT: Palette = {
   starA: 0.3,
 }
 
+/** Per-device work budget. */
+interface Budget {
+  /** Viewport area per node — higher divisor means fewer nodes. */
+  nodeArea: number
+  nodeMax: number
+  starArea: number
+  starMax: number
+  fps: number
+  comets: boolean
+  maxDpr: number
+}
+
+const BUDGETS: Record<DeviceTier, Budget> = {
+  high: { nodeArea: 17000, nodeMax: 96, starArea: 6400, starMax: 210, fps: 40, comets: true, maxDpr: 2 },
+  mid: { nodeArea: 22000, nodeMax: 68, starArea: 8200, starMax: 150, fps: 32, comets: true, maxDpr: 1.75 },
+  low: { nodeArea: 30000, nodeMax: 40, starArea: 12000, starMax: 90, fps: 26, comets: false, maxDpr: 1.5 },
+}
+
+/** Alpha buckets used to batch draw calls. */
+const LINK_BUCKETS = 5
+const STAR_BUCKETS = 7
+
 /**
  * Page-wide constellation field: a twinkling star layer, drifting nodes,
  * links between nearby pairs, and a soft glow that lags behind the pointer.
  *
  * Deliberately cheap, because a WebGL hero scene is already running:
- *  - throttled to ~40fps (the drift is slow; 60fps buys nothing)
- *  - node count scales with viewport area and is hard-capped, so a 4K display
- *    does not get a 600-node O(n^2) link loop
- *  - stars are static: no position maths, just an alpha per frame, and only
- *    the handful of bright ones pay for a gradient halo
- *  - pauses entirely on `visibilitychange`
- *  - draws once and freezes under `prefers-reduced-motion`
+ *  - node and star counts scale with viewport area *and* device tier, so a
+ *    mid-range phone does not run a desktop-sized O(n²) link loop
+ *  - draw calls are batched into alpha buckets: the link layer used to issue
+ *    one `beginPath`/`stroke` pair per connected pair (thousands per frame)
+ *    and the star layer one `fillStyle` assignment per star. Both are now a
+ *    handful of paths per frame, which is where most of the 2D cost went
+ *  - the halo behind bright stars is a pre-rendered sprite instead of a fresh
+ *    radial gradient per star per frame
+ *  - pointer interaction (repulsion + cursor glow) is skipped entirely on
+ *    touch devices, where there is no cursor to follow
+ *  - pauses on `visibilitychange`, and freezes after one draw under
+ *    `prefers-reduced-motion`
  */
 export function Constellation() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const { theme } = useTheme()
   const paletteRef = useRef<Palette>(DARK)
+  const repaintRef = useRef<(() => void) | null>(null)
 
   useEffect(() => {
     paletteRef.current = theme === 'light' ? LIGHT : DARK
+    // Reduced motion draws a single frame, so a theme switch has to force it.
+    repaintRef.current?.()
   }, [theme])
 
   useEffect(() => {
@@ -96,6 +127,9 @@ export function Constellation() {
     if (!ctx) return
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const budget = BUDGETS[detectDeviceTier()]
+    const pointerEnabled = hasFinePointer()
+    const INTERVAL = 1000 / budget.fps
 
     let width = 0
     let height = 0
@@ -108,12 +142,38 @@ export function Constellation() {
     let raf = 0
     let last = 0
     let time = 0
-    const INTERVAL = 1000 / 40
+
+    // Reused per frame: batching link segments and star arcs by alpha bucket
+    // turns thousands of canvas state changes into a few dozen.
+    const linkBuckets: number[][] = Array.from({ length: LINK_BUCKETS }, () => [])
+    const starBuckets: number[][] = Array.from({ length: STAR_BUCKETS }, () => [])
+
+    /** Pre-rendered halo for bright stars, redrawn only when the palette flips. */
+    let halo: HTMLCanvasElement | null = null
+    let haloKey = ''
+
+    function buildHalo(colour: string) {
+      if (haloKey === colour && halo) return
+      const size = 64
+      const c = document.createElement('canvas')
+      c.width = size
+      c.height = size
+      const g = c.getContext('2d')
+      if (!g) return
+      const grad = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2)
+      grad.addColorStop(0, `rgba(${colour},1)`)
+      grad.addColorStop(1, `rgba(${colour},0)`)
+      g.fillStyle = grad
+      g.fillRect(0, 0, size, size)
+      halo = c
+      haloKey = colour
+    }
 
     const ptr = { x: -9999, y: -9999, gx: -9999, gy: -9999, active: false }
 
     function seed() {
-      const target = Math.max(34, Math.min(118, Math.round((width * height) / 15500)))
+      const area = width * height
+      const target = Math.max(28, Math.min(budget.nodeMax, Math.round(area / budget.nodeArea)))
       nodes = Array.from({ length: target }, () => ({
         x: Math.random() * width,
         y: Math.random() * height,
@@ -124,7 +184,7 @@ export function Constellation() {
 
       // Star layer sits behind the network: denser, smaller, and fixed, so it
       // reads as deep space rather than more of the same drifting mesh.
-      const starCount = Math.max(70, Math.min(260, Math.round((width * height) / 6200)))
+      const starCount = Math.max(60, Math.min(budget.starMax, Math.round(area / budget.starArea)))
       stars = Array.from({ length: starCount }, () => {
         const big = Math.random() < 0.06
         return {
@@ -141,7 +201,7 @@ export function Constellation() {
 
     function resize() {
       if (!canvas || !ctx) return
-      const dpr = Math.min(window.devicePixelRatio || 1, 2)
+      const dpr = Math.min(window.devicePixelRatio || 1, budget.maxDpr)
       width = window.innerWidth
       height = window.innerHeight
       canvas.width = Math.round(width * dpr)
@@ -156,32 +216,53 @@ export function Constellation() {
     function draw() {
       if (!ctx) return
       const P = paletteRef.current
+      buildHalo(P.star)
       ctx.clearRect(0, 0, width, height)
 
       // ── Star layer ───────────────────────────────────────────────
       // Brightness is a squared sine, which spends most of its time dim and
       // spikes briefly: that asymmetry is what makes a twinkle look real.
+      for (const b of starBuckets) b.length = 0
+
       for (const s of stars) {
         const osc = Math.sin(time * s.tw + s.ph)
         const f = s.a * P.starA * (0.35 + 0.65 * osc * osc)
 
-        if (s.big) {
-          const g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r * 7)
-          g.addColorStop(0, `rgba(${P.star},${(f * 0.5).toFixed(3)})`)
-          g.addColorStop(1, `rgba(${P.star},0)`)
-          ctx.fillStyle = g
-          ctx.beginPath()
-          ctx.arc(s.x, s.y, s.r * 7, 0, Math.PI * 2)
-          ctx.fill()
+        if (s.big && halo) {
+          const d = s.r * 14
+          ctx.globalAlpha = f * 0.5
+          ctx.drawImage(halo, s.x - d / 2, s.y - d / 2, d, d)
+          ctx.globalAlpha = 1
         }
 
-        ctx.fillStyle = `rgba(${P.star},${f.toFixed(3)})`
+        // Quantise the brightness into buckets so every star in a bucket can
+        // be filled in one path with one fillStyle. Normalising by the
+        // palette's ceiling keeps the same fidelity in both themes.
+        const norm = P.starA > 0 ? f / P.starA : 0
+        const bucket = Math.min(STAR_BUCKETS - 1, Math.max(0, Math.floor(norm * STAR_BUCKETS)))
+        starBuckets[bucket].push(s.x, s.y, s.r)
+      }
+
+      for (let b = 0; b < STAR_BUCKETS; b++) {
+        const list = starBuckets[b]
+        if (list.length === 0) continue
+        const alpha = ((b + 0.5) / STAR_BUCKETS) * P.starA
+        ctx.fillStyle = `rgba(${P.star},${alpha.toFixed(3)})`
         ctx.beginPath()
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2)
+        for (let i = 0; i < list.length; i += 3) {
+          const x = list[i]
+          const y = list[i + 1]
+          const r = list[i + 2]
+          ctx.moveTo(x + r, y)
+          ctx.arc(x, y, r, 0, Math.PI * 2)
+        }
         ctx.fill()
       }
 
-      ctx.lineWidth = 0.6
+      // ── Link mesh ────────────────────────────────────────────────
+      for (const b of linkBuckets) b.length = 0
+
+      const linkSq = link * link
       for (let i = 0; i < nodes.length; i++) {
         const a = nodes[i]
         for (let j = i + 1; j < nodes.length; j++) {
@@ -189,22 +270,35 @@ export function Constellation() {
           const dx = a.x - b.x
           const dy = a.y - b.y
           const d2 = dx * dx + dy * dy
-          if (d2 > link * link) continue
+          if (d2 > linkSq) continue
           const t = 1 - Math.sqrt(d2) / link
-          ctx.strokeStyle = `rgba(${P.link},${(t * P.linkA).toFixed(3)})`
-          ctx.beginPath()
-          ctx.moveTo(a.x, a.y)
-          ctx.lineTo(b.x, b.y)
-          ctx.stroke()
+          const bucket = Math.min(LINK_BUCKETS - 1, Math.floor(t * LINK_BUCKETS))
+          linkBuckets[bucket].push(a.x, a.y, b.x, b.y)
         }
       }
 
-      ctx.fillStyle = `rgba(${P.node},${P.nodeA})`
-      for (const n of nodes) {
+      ctx.lineWidth = 0.6
+      for (let b = 0; b < LINK_BUCKETS; b++) {
+        const list = linkBuckets[b]
+        if (list.length === 0) continue
+        const t = (b + 0.5) / LINK_BUCKETS
+        ctx.strokeStyle = `rgba(${P.link},${(t * P.linkA).toFixed(3)})`
         ctx.beginPath()
-        ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2)
-        ctx.fill()
+        for (let i = 0; i < list.length; i += 4) {
+          ctx.moveTo(list[i], list[i + 1])
+          ctx.lineTo(list[i + 2], list[i + 3])
+        }
+        ctx.stroke()
       }
+
+      // ── Nodes ────────────────────────────────────────────────────
+      ctx.fillStyle = `rgba(${P.node},${P.nodeA})`
+      ctx.beginPath()
+      for (const n of nodes) {
+        ctx.moveTo(n.x + n.r, n.y)
+        ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2)
+      }
+      ctx.fill()
 
       // Shooting stars: a slow, occasional streak so the field feels alive
       // without becoming a screensaver.
@@ -227,7 +321,7 @@ export function Constellation() {
         ctx.fill()
       }
 
-      if (ptr.active && ptr.gx > -9000) {
+      if (pointerEnabled && ptr.active && ptr.gx > -9000) {
         const grad = ctx.createRadialGradient(ptr.gx, ptr.gy, 0, ptr.gx, ptr.gy, 120)
         grad.addColorStop(0, `rgba(${P.glow},${P.glowA})`)
         grad.addColorStop(0.45, `rgba(${P.glow},${(P.glowA * 0.3).toFixed(3)})`)
@@ -256,7 +350,7 @@ export function Constellation() {
         if (n.y < -20) n.y = height + 20
         if (n.y > height + 20) n.y = -20
 
-        if (ptr.active) {
+        if (pointerEnabled && ptr.active) {
           const dx = n.x - ptr.x
           const dy = n.y - ptr.y
           const d2 = dx * dx + dy * dy
@@ -269,8 +363,12 @@ export function Constellation() {
         }
       }
 
-      ptr.gx += (ptr.x - ptr.gx) * 0.06
-      ptr.gy += (ptr.y - ptr.gy) * 0.06
+      if (pointerEnabled) {
+        ptr.gx += (ptr.x - ptr.gx) * 0.06
+        ptr.gy += (ptr.y - ptr.gy) * 0.06
+      }
+
+      if (!budget.comets) return
 
       nextComet -= INTERVAL
       if (nextComet <= 0 && comets.length < 2) {
@@ -309,6 +407,8 @@ export function Constellation() {
     }
 
     resize()
+    repaintRef.current = draw
+
     if (reduced) {
       draw()
     } else {
@@ -343,29 +443,22 @@ export function Constellation() {
     }
 
     window.addEventListener('resize', onResize)
-    window.addEventListener('pointermove', onMove, { passive: true })
-    window.addEventListener('pointerleave', onLeave)
     document.addEventListener('visibilitychange', onVisibility)
+    if (pointerEnabled) {
+      window.addEventListener('pointermove', onMove, { passive: true })
+      window.addEventListener('pointerleave', onLeave)
+    }
 
     return () => {
       cancelAnimationFrame(raf)
       clearTimeout(resizeTimer)
+      repaintRef.current = null
       window.removeEventListener('resize', onResize)
+      document.removeEventListener('visibilitychange', onVisibility)
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerleave', onLeave)
-      document.removeEventListener('visibilitychange', onVisibility)
     }
   }, [])
-
-  // Repaint immediately on theme change so the field does not wait a frame.
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    // reduced-motion draws once, so force a redraw with the new palette
-    const ctx = canvas.getContext('2d')
-    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height)
-  }, [theme])
 
   return (
     <>

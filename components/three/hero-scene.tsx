@@ -5,6 +5,109 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { MeshDistortMaterial, Sparkles, Stars } from '@react-three/drei'
 import * as THREE from 'three'
 import { useTheme } from '@/components/theme-provider'
+import { hasFinePointer, type DeviceTier } from '@/lib/device'
+
+/* ─────────────────────────────────────────────
+   Upstream deprecation notice
+
+   three r183 deprecated `Clock` in favour of `Timer` and warns from the
+   constructor. Nothing in this file builds one — R3F's frameloop store does
+   (`@react-three/fiber@9.7.0`), so there is no change on our side that stops
+   it, and no 9.x release has migrated: pmndrs/react-three-fiber#3741 is open
+   and deferred to a major, because `Timer` would raise fiber's minimum three
+   version from r156 to r178.
+
+   That matters more than a tidy console, because three's `warn()` is not
+   gated on NODE_ENV — it reaches production users too. `setConsoleFunction`
+   is three's own supported hook for routing its logging, so this drops that
+   one exact string and forwards every other message untouched. Delete the
+   whole block once fiber migrates to `Timer`.
+
+   (The forward is faithful: three only enriches params for its `TSL:`
+   shader-language messages, which this scene never emits.)
+   ───────────────────────────────────────────── */
+
+const FIXED_UPSTREAM =
+  'THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.'
+
+if (THREE.getConsoleFunction() === null) {
+  THREE.setConsoleFunction((type, message, ...params) => {
+    if (type === 'warn' && message === FIXED_UPSTREAM) return
+    console[type](message, ...params)
+  })
+}
+
+/* ─────────────────────────────────────────────
+   Quality tiers
+
+   The scene used to render at one fixed cost on every device. The dominant
+   item was the core: `icosahedronGeometry(2.05, 6)` is 20 · 4⁶ = 81,920
+   triangles, all of them re-displaced every frame by the distort material,
+   for an object that is ~300px wide on a phone. Detail 5/4/3 costs 20,480 /
+   5,120 / 1,280 triangles and — because the surface is flat-shaded — reads as
+   *more* obviously cut crystal at the lower settings, not less.
+
+   Everything else here follows the same rule: keep the composition identical,
+   spend fewer triangles and fewer pixels on the devices that can't afford it.
+   ───────────────────────────────────────────── */
+
+interface Quality {
+  dpr: [number, number]
+  antialias: boolean
+  /** Icosahedron subdivisions for the crystal body. */
+  coreDetail: number
+  /** Tubular segments per orbit ring. */
+  ringSegments: number
+  /** Width/height segments on the rim-glow shell. */
+  atmoSegments: number
+  /** The counter-rotating inner wireframe — depth cue, not structure. */
+  innerCage: boolean
+  starCount: number
+  sparkleCount: number
+  /** clearcoat + iridescence turn the body into a full physical shader. */
+  richMaterial: boolean
+  /** Projecting 14 DOM labels each frame is desktop-only anyway. */
+  labels: boolean
+}
+
+const QUALITY: Record<DeviceTier, Quality> = {
+  high: {
+    dpr: [1, 1.75],
+    antialias: true,
+    coreDetail: 5,
+    ringSegments: 180,
+    atmoSegments: 48,
+    innerCage: true,
+    starCount: 900,
+    sparkleCount: 40,
+    richMaterial: true,
+    labels: true,
+  },
+  mid: {
+    dpr: [1, 1.5],
+    antialias: true,
+    coreDetail: 4,
+    ringSegments: 128,
+    atmoSegments: 32,
+    innerCage: true,
+    starCount: 520,
+    sparkleCount: 22,
+    richMaterial: true,
+    labels: true,
+  },
+  low: {
+    dpr: [1, 1.25],
+    antialias: false,
+    coreDetail: 3,
+    ringSegments: 84,
+    atmoSegments: 24,
+    innerCage: false,
+    starCount: 260,
+    sparkleCount: 0,
+    richMaterial: false,
+    labels: false,
+  },
+}
 
 /* ─────────────────────────────────────────────
    Orbit system
@@ -118,14 +221,29 @@ const SHARDS = [
 
 const CORE_R = 2.05
 
-function CrystalShards({ colors, reduced }: { colors: SceneColors; reduced: boolean }) {
+function CrystalShards({
+  colors,
+  reduced,
+  quality,
+}: {
+  colors: SceneColors
+  reduced: boolean
+  quality: Quality
+}) {
   const gems = useRef<(THREE.Mesh | null)[]>([])
   const halos = useRef<(THREE.Mesh | null)[]>([])
   const elapsed = useRef(0)
 
+  // The two smallest gems are sub-pixel detail at phone scale.
+  const shards = useMemo(
+    () => (quality.coreDetail <= 3 ? SHARDS.slice(0, 4) : SHARDS),
+    [quality.coreDetail],
+  )
+  const haloSegments = quality.coreDetail <= 3 ? 10 : 16
+
   const placed = useMemo(
     () =>
-      SHARDS.map((s) => {
+      shards.map((s) => {
         const v = new THREE.Vector3(...s.dir).normalize()
         return {
           ...s,
@@ -139,7 +257,7 @@ function CrystalShards({ colors, reduced }: { colors: SceneColors; reduced: bool
           ),
         }
       }),
-    [],
+    [shards],
   )
 
   useFrame((_, delta) => {
@@ -197,7 +315,7 @@ function CrystalShards({ colors, reduced }: { colors: SceneColors; reduced: bool
             }}
             scale={1}
           >
-            <sphereGeometry args={[s.size * 2.6, 16, 16]} />
+            <sphereGeometry args={[s.size * 2.6, haloSegments, haloSegments]} />
             <meshBasicMaterial
               color={colors.flare}
               transparent
@@ -212,7 +330,15 @@ function CrystalShards({ colors, reduced }: { colors: SceneColors; reduced: bool
   )
 }
 
-function Core({ colors, reduced }: { colors: SceneColors; reduced: boolean }) {
+function Core({
+  colors,
+  reduced,
+  quality,
+}: {
+  colors: SceneColors
+  reduced: boolean
+  quality: Quality
+}) {
   const shell = useRef<THREE.Group>(null)
 
   useFrame((_, delta) => {
@@ -227,7 +353,7 @@ function Core({ colors, reduced }: { colors: SceneColors; reduced: boolean }) {
           surface as the crystal turns. */}
       <group ref={shell}>
         <mesh>
-          <icosahedronGeometry args={[CORE_R, 6]} />
+          <icosahedronGeometry args={[CORE_R, quality.coreDetail]} />
           <MeshDistortMaterial
             color={colors.core}
             emissive={colors.emissive}
@@ -238,9 +364,9 @@ function Core({ colors, reduced }: { colors: SceneColors; reduced: boolean }) {
             // discrete planes: each one takes the light at its own angle, so
             // the body reads as cut crystal instead of a smooth blob.
             flatShading
-            clearcoat={1}
+            clearcoat={quality.richMaterial ? 1 : 0}
             clearcoatRoughness={0.16}
-            iridescence={0.55}
+            iridescence={quality.richMaterial ? 0.55 : 0}
             iridescenceIOR={1.4}
             distort={reduced ? 0 : 0.24}
             speed={1.1}
@@ -260,13 +386,13 @@ function Core({ colors, reduced }: { colors: SceneColors; reduced: boolean }) {
           />
         </mesh>
 
-        <CrystalShards colors={colors} reduced={reduced} />
+        <CrystalShards colors={colors} reduced={reduced} quality={quality} />
       </group>
 
       {/* Atmosphere shell: back-faces only, additive, so it reads as a rim
           glow around the orb instead of a second visible sphere. */}
       <mesh scale={1.16}>
-        <sphereGeometry args={[CORE_R, 48, 48]} />
+        <sphereGeometry args={[CORE_R, quality.atmoSegments, quality.atmoSegments]} />
         <meshBasicMaterial
           color={colors.wire}
           transparent
@@ -280,7 +406,15 @@ function Core({ colors, reduced }: { colors: SceneColors; reduced: boolean }) {
   )
 }
 
-function Cage({ colors, reduced }: { colors: SceneColors; reduced: boolean }) {
+function Cage({
+  colors,
+  reduced,
+  quality,
+}: {
+  colors: SceneColors
+  reduced: boolean
+  quality: Quality
+}) {
   const outer = useRef<THREE.Mesh>(null)
   const inner = useRef<THREE.Mesh>(null)
 
@@ -304,27 +438,29 @@ function Cage({ colors, reduced }: { colors: SceneColors; reduced: boolean }) {
         <icosahedronGeometry args={[3.15, 1]} />
         <meshBasicMaterial color={colors.wire} wireframe transparent opacity={0.26} />
       </mesh>
-      <mesh ref={inner}>
-        <icosahedronGeometry args={[2.62, 2]} />
-        <meshBasicMaterial
-          color={colors.wire}
-          wireframe
-          transparent
-          opacity={0.09}
-          depthWrite={false}
-        />
-      </mesh>
+      {quality.innerCage && (
+        <mesh ref={inner}>
+          <icosahedronGeometry args={[2.62, 2]} />
+          <meshBasicMaterial
+            color={colors.wire}
+            wireframe
+            transparent
+            opacity={0.09}
+            depthWrite={false}
+          />
+        </mesh>
+      )}
     </>
   )
 }
 
-function Rings({ colors }: { colors: SceneColors }) {
+function Rings({ colors, quality }: { colors: SceneColors; quality: Quality }) {
   return (
     <>
       {ORBITS.map((o, i) => (
         <group key={i} rotation={[0, o.node, 0]}>
           <mesh rotation={[o.inc, 0, 0]}>
-            <torusGeometry args={[o.r, 0.0075, 8, 180]} />
+            <torusGeometry args={[o.r, 0.0075, 6, quality.ringSegments]} />
             <meshBasicMaterial color={colors.wire} transparent opacity={o.opacity} />
           </mesh>
         </group>
@@ -393,9 +529,14 @@ function Satellites({ colors, reduced }: { colors: SceneColors; reduced: boolean
    stays crisp at any zoom. Each frame an invisible anchor is placed on its
    orbit, its world position is projected through the camera, and the badge
    is moved to the resulting screen coordinate.
+
+   There is no point running any of this below ~1200px: the copy column owns
+   the frame and every badge would be faded to zero anyway. Below that width
+   the projector hides the layer once and then does nothing per frame.
    ───────────────────────────────────────────── */
 
 const CORE_RADIUS = CORE_R
+const LABEL_MIN_WIDTH = 1200
 
 function LabelProjector({
   nodes,
@@ -414,6 +555,7 @@ function LabelProjector({
   const coreEdge = useMemo(() => new THREE.Vector3(), [])
   const camRight = useMemo(() => new THREE.Vector3(), [])
   const guard = useRef({ from: 0.55, to: 0.68 })
+  const hidden = useRef(false)
 
   // Measure the real right edge of the hero copy column so the fade
   // boundary follows the actual layout instead of a guessed percentage.
@@ -440,9 +582,18 @@ function LabelProjector({
   useFrame((_, delta) => {
     const list = nodes.current
     if (!list) return
-    elapsed.current += delta
 
-    const show = size.width >= 1200
+    // Narrow viewport: hide once, then spend nothing until it widens.
+    if (size.width < LABEL_MIN_WIDTH) {
+      if (!hidden.current) {
+        for (const el of list) if (el) el.style.opacity = '0'
+        hidden.current = true
+      }
+      return
+    }
+    hidden.current = false
+
+    elapsed.current += delta
     const t = elapsed.current
     const halfW = size.width / 2
     const halfH = size.height / 2
@@ -475,11 +626,6 @@ function LabelProjector({
       const el = list[i]
       const anchor = anchors.current[i]
       if (!el || !anchor) continue
-
-      if (!show) {
-        el.style.opacity = '0'
-        continue
-      }
 
       const cfg = ORBIT_SKILLS[i]
       const angle = cfg.phase + (reduced ? 0 : t * cfg.speed)
@@ -549,15 +695,18 @@ function LabelProjector({
 function SceneContent({
   colors,
   reduced,
+  quality,
   labelNodes,
 }: {
   colors: SceneColors
   reduced: boolean
+  quality: Quality
   labelNodes: React.RefObject<(HTMLSpanElement | null)[]>
 }) {
   const worldRef = useRef<THREE.Group>(null)
   const { size, camera } = useThree()
   const pointer = useRef({ tx: 0, ty: 0, x: 0, y: 0 })
+  const parallax = useRef(false)
 
   // Composition: push the object into the right-hand negative space on
   // desktop; centre it above the copy and shrink it on small screens.
@@ -566,14 +715,26 @@ function SceneContent({
     if (!group) return
     const wide = size.width >= 1024
     group.position.x = wide ? 4.05 : 0
-    group.position.y = wide ? 0.25 : 2.1
-    const s = wide ? 1 : THREE.MathUtils.clamp(size.width / 900, 0.52, 0.78)
+    // On a phone the copy runs the full width of the frame, so the orb sits
+    // high behind the headline (and `.hero-canvas` dims it) instead of
+    // fighting the text for the same pixels.
+    group.position.y = wide ? 0.25 : size.width >= 768 ? 1.8 : 2.4
+    const s = wide ? 1 : THREE.MathUtils.clamp(size.width / 900, 0.46, 0.78)
     group.scale.setScalar(s)
     camera.position.z = wide ? 13.6 : 14.6
     camera.updateProjectionMatrix()
   }, [size.width, camera])
 
+  // Pointer parallax is a mouse affordance. On a touch screen `pointermove`
+  // only fires mid-drag, so the scene would lurch while the user scrolls —
+  // and the listener would add work to every scroll frame for nothing.
   useEffect(() => {
+    if (!hasFinePointer()) {
+      parallax.current = false
+      return
+    }
+    parallax.current = true
+
     function onMove(e: PointerEvent) {
       pointer.current.tx = (e.clientX / window.innerWidth - 0.5) * 2
       pointer.current.ty = (e.clientY / window.innerHeight - 0.5) * 2
@@ -586,8 +747,10 @@ function SceneContent({
     const group = worldRef.current
     if (!group) return
     const p = pointer.current
-    p.x += (p.tx - p.x) * 0.045
-    p.y += (p.ty - p.y) * 0.045
+    if (parallax.current) {
+      p.x += (p.tx - p.x) * 0.045
+      p.y += (p.ty - p.y) * 0.045
+    }
     group.rotation.y = p.x * 0.2
     group.rotation.x = p.y * 0.12
     camera.position.x = p.x * 0.55
@@ -602,16 +765,32 @@ function SceneContent({
       <pointLight position={[0, 0, 4.5]} intensity={30} distance={26} color={colors.core} />
       <ambientLight intensity={0.35} />
 
-      <Stars radius={48} depth={30} count={900} factor={3.2} saturation={0} fade speed={0.4} />
+      <Stars
+        radius={48}
+        depth={30}
+        count={quality.starCount}
+        factor={3.2}
+        saturation={0}
+        fade
+        speed={0.4}
+      />
 
       <group ref={worldRef}>
-        <Core colors={colors} reduced={reduced} />
-        <Cage colors={colors} reduced={reduced} />
-        <Rings colors={colors} />
+        <Core colors={colors} reduced={reduced} quality={quality} />
+        <Cage colors={colors} reduced={reduced} quality={quality} />
+        <Rings colors={colors} quality={quality} />
         <Satellites colors={colors} reduced={reduced} />
-        <LabelProjector nodes={labelNodes} reduced={reduced} worldRef={worldRef} />
-        {!reduced && (
-          <Sparkles count={40} scale={9} size={2.4} speed={0.3} color={colors.dust} />
+        {quality.labels && (
+          <LabelProjector nodes={labelNodes} reduced={reduced} worldRef={worldRef} />
+        )}
+        {!reduced && quality.sparkleCount > 0 && (
+          <Sparkles
+            count={quality.sparkleCount}
+            scale={9}
+            size={2.4}
+            speed={0.3}
+            color={colors.dust}
+          />
         )}
       </group>
     </>
@@ -622,13 +801,20 @@ function SceneContent({
    Public component
    ───────────────────────────────────────────── */
 
-export function HeroScene() {
+export function HeroScene({
+  tier = 'high',
+  active = true,
+  reduced = false,
+}: {
+  tier?: DeviceTier
+  /** False when the hero has scrolled away or the tab is hidden. */
+  active?: boolean
+  reduced?: boolean
+}) {
   const { theme } = useTheme()
   const colors = theme === 'light' ? LIGHT : DARK
   const labelNodes = useRef<(HTMLSpanElement | null)[]>([])
-  const reduced =
-    typeof window !== 'undefined' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const quality = QUALITY[tier]
 
   return (
     <>
@@ -636,35 +822,51 @@ export function HeroScene() {
           dimensions. Styling the canvas itself with `absolute inset-0`
           looks right but reports a zero-size container, and the render
           loop never starts. */}
-      <div className="absolute inset-0" aria-hidden="true">
-      <Canvas
-        dpr={[1, 1.9]}
-        gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
-        camera={{ fov: 46, position: [0, 0.35, 13.6], near: 0.1, far: 120 }}
-        // A failed WebGL context must not take the hero down with it.
-        onCreated={({ gl }) => gl.setClearColor(0x000000, 0)}
-      >
-        <Suspense fallback={null}>
-          <SceneContent colors={colors} reduced={reduced} labelNodes={labelNodes} />
-        </Suspense>
-      </Canvas>
+      <div className="hero-canvas absolute inset-0" aria-hidden="true">
+        <Canvas
+          dpr={quality.dpr}
+          // `never` fully parks the render loop. Previously the scene kept
+          // drawing at 60fps while the visitor read the case studies six
+          // sections down — the largest single waste on the page.
+          frameloop={active && !reduced ? 'always' : 'never'}
+          gl={{
+            antialias: quality.antialias,
+            alpha: true,
+            powerPreference: 'high-performance',
+          }}
+          camera={{ fov: 46, position: [0, 0.35, 13.6], near: 0.1, far: 120 }}
+          // A failed WebGL context must not take the hero down with it.
+          onCreated={({ gl }) => gl.setClearColor(0x000000, 0)}
+        >
+          <Suspense fallback={null}>
+            <SceneContent
+              colors={colors}
+              reduced={reduced}
+              quality={quality}
+              labelNodes={labelNodes}
+            />
+          </Suspense>
+        </Canvas>
       </div>
 
-      {/* Orbiting skill labels — DOM overlay, positioned each frame from 3D. */}
-      <div className="orbit-layer" aria-hidden="true">
-        {ORBIT_SKILLS.map((s, i) => (
-          <span
-            key={s.label}
-            ref={(el) => {
-              labelNodes.current[i] = el
-            }}
-            className="orbit-badge"
-            style={{ color: s.color, borderColor: `${s.color}4d` }}
-          >
-            {s.label}
-          </span>
-        ))}
-      </div>
+      {/* Orbiting skill labels — DOM overlay, positioned each frame from 3D.
+          Skipped entirely on tiers that never show them. */}
+      {quality.labels && (
+        <div className="orbit-layer" aria-hidden="true">
+          {ORBIT_SKILLS.map((s, i) => (
+            <span
+              key={s.label}
+              ref={(el) => {
+                labelNodes.current[i] = el
+              }}
+              className="orbit-badge"
+              style={{ color: s.color, borderColor: `${s.color}4d` }}
+            >
+              {s.label}
+            </span>
+          ))}
+        </div>
+      )}
     </>
   )
 }

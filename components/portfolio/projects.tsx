@@ -241,11 +241,11 @@ function Metrics({ items, className }: { items: { v: string; k: string }[]; clas
   return (
     <div className={className}>
       {items.map((m) => (
-        <div key={m.k}>
-          <b className="block font-heading text-xl leading-tight text-primary md:text-2xl">
+        <div key={m.k} className="min-w-0">
+          <b className="block font-heading text-lg leading-tight text-primary sm:text-xl md:text-2xl">
             {m.v}
           </b>
-          <span className="font-mono text-[0.58rem] uppercase tracking-[0.11em] text-muted-foreground">
+          <span className="block font-mono text-[0.55rem] uppercase tracking-[0.09em] text-muted-foreground sm:text-[0.58rem] sm:tracking-[0.11em]">
             {m.k}
           </span>
         </div>
@@ -269,9 +269,19 @@ function Tags({ items }: { items: string[] }) {
   )
 }
 
-function Shot({ project, priority }: { project: Project; priority?: boolean }) {
+function Shot({ project }: { project: Project }) {
+  // Only the featured card ever becomes a full-height column, and only at
+  // `lg` where it actually sits beside its copy. The old rule fired at `md`,
+  // where the card is still single-column — so a tablet got a 430px-tall
+  // screenshot above the text for no reason.
+  const fill = project.featured
+    ? 'aspect-[16/10] lg:aspect-auto lg:h-full lg:min-h-[27rem]'
+    : 'aspect-[16/10]'
+
   return (
-    <div className="proj-shot relative aspect-[16/10] overflow-hidden border-b border-border bg-secondary md:aspect-auto md:h-full md:min-h-[430px]">
+    <div
+      className={`proj-shot relative overflow-hidden border-b border-border bg-secondary ${fill}`}
+    >
       <span className="glass absolute top-3 left-3 z-[2] inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-[0.58rem] uppercase tracking-[0.13em] text-accent">
         <span aria-hidden="true" className="size-1.5 rounded-full bg-current" />
         {project.live ? 'Live' : 'Source'}
@@ -282,13 +292,19 @@ function Shot({ project, priority }: { project: Project; priority?: boolean }) {
           src={project.image}
           alt={`Screenshot of ${project.name}`}
           fill
-          sizes="(min-width: 880px) 50vw, 100vw"
+          sizes="(min-width: 1024px) 50vw, 100vw"
+          quality={80}
+          // Deliberately not `priority`. Every card here is below the fold —
+          // preloading the first screenshot only stole bandwidth from the
+          // hero, whose LCP element is text.
+          loading="lazy"
           className="object-cover object-top"
-          priority={priority}
         />
       ) : (
         <div className="grid h-full w-full place-items-center bg-gradient-to-br from-secondary to-card">
-          <span className="font-heading text-6xl text-primary/30">{project.name.charAt(0)}</span>
+          <span className="font-heading text-5xl text-primary/30 sm:text-6xl">
+            {project.name.charAt(0)}
+          </span>
         </div>
       )}
 
@@ -309,6 +325,7 @@ function CaseStudy({ project, onClose }: { project: Project; onClose: () => void
 
   useEffect(() => {
     closeRef.current?.focus()
+    const previous = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') onClose()
@@ -316,7 +333,7 @@ function CaseStudy({ project, onClose }: { project: Project; onClose: () => void
     window.addEventListener('keydown', onKey)
     return () => {
       window.removeEventListener('keydown', onKey)
-      document.body.style.overflow = ''
+      document.body.style.overflow = previous
     }
   }, [onClose])
 
@@ -328,24 +345,33 @@ function CaseStudy({ project, onClose }: { project: Project; onClose: () => void
         onClick={onClose}
         className="absolute inset-0 cursor-default bg-black/70 backdrop-blur-sm"
       />
+      {/* Bottom sheet on a phone, centred dialog from md up. `overscroll-contain`
+          stops a flick at the end of the sheet from scrolling the page behind
+          it, which is the standard iOS annoyance with modals like this. */}
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="case-title"
-        className="modal-card absolute bottom-0 left-1/2 max-h-[92svh] w-[min(62rem,100%)] -translate-x-1/2 overflow-y-auto rounded-t-3xl border border-border bg-background md:top-1/2 md:bottom-auto md:max-h-[88svh] md:-translate-y-1/2 md:rounded-3xl"
+        className="modal-card absolute bottom-0 left-1/2 flex max-h-[92svh] w-[min(62rem,100%)] -translate-x-1/2 flex-col overflow-y-auto overscroll-contain rounded-t-3xl border border-border bg-background md:top-1/2 md:bottom-auto md:max-h-[88svh] md:-translate-y-1/2 md:rounded-3xl"
       >
-        <button
-          ref={closeRef}
-          type="button"
-          onClick={onClose}
-          aria-label="Close case study"
-          className="glass sticky top-3 float-right mt-3 mr-3 z-[3] grid size-9 place-items-center rounded-full transition-colors hover:text-primary"
-        >
-          <X className="size-4" />
-        </button>
+        {/* Zero-height sticky rail: the button floats over the content and
+            stays reachable at the top of the scroll container. A floated
+            button (the previous approach) drifts out of reach on a long case
+            study, and a plain absolute one scrolls away entirely. */}
+        <div className="sticky top-0 z-[3] h-0">
+          <button
+            ref={closeRef}
+            type="button"
+            onClick={onClose}
+            aria-label="Close case study"
+            className="glass-strong absolute top-3 right-3 grid size-10 place-items-center rounded-full transition-colors hover:text-primary"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
 
-        <div className="px-5 pt-6 md:px-9 md:pt-8">
-          <p className="mb-2 flex flex-wrap items-center gap-2 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted-foreground">
+        <div className="px-5 pt-6 pr-16 md:px-9 md:pt-8 md:pr-20">
+          <p className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-muted-foreground sm:text-[0.62rem] sm:tracking-[0.14em]">
             <b className="font-medium text-primary">Case study</b>
             <span aria-hidden="true">·</span>
             <span>{project.type}</span>
@@ -354,11 +380,11 @@ function CaseStudy({ project, onClose }: { project: Project; onClose: () => void
           </p>
           <h3
             id="case-title"
-            className="font-heading text-2xl font-bold tracking-tight md:text-4xl"
+            className="font-heading text-[1.6rem] font-bold tracking-tight sm:text-3xl md:text-4xl"
           >
             {project.name}
           </h3>
-          <p className="mt-3 max-w-[44rem] leading-relaxed text-muted-foreground">
+          <p className="mt-3 max-w-[44rem] text-[0.92rem] leading-relaxed text-muted-foreground sm:text-base">
             {project.summary}
           </p>
         </div>
@@ -369,7 +395,8 @@ function CaseStudy({ project, onClose }: { project: Project; onClose: () => void
               src={project.image}
               alt={`Screenshot of ${project.name}`}
               fill
-              sizes="62rem"
+              sizes="(min-width: 768px) 62rem, 100vw"
+              quality={80}
               className="object-cover object-top"
             />
           </div>
@@ -378,14 +405,14 @@ function CaseStudy({ project, onClose }: { project: Project; onClose: () => void
         <div className="grid gap-7 px-5 py-7 md:px-9 md:py-9">
           <Metrics
             items={project.metrics}
-            className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border/40 sm:grid-cols-4 [&>div]:bg-card [&>div]:p-4"
+            className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border/40 sm:grid-cols-4 [&>div]:bg-card [&>div]:p-3.5 sm:[&>div]:p-4"
           />
 
           <div>
             <h4 className="mb-2 font-mono text-[0.64rem] font-medium uppercase tracking-[0.15em] text-primary">
               The problem
             </h4>
-            <p className="max-w-[46rem] leading-relaxed text-muted-foreground">
+            <p className="max-w-[46rem] text-[0.92rem] leading-relaxed text-muted-foreground sm:text-base">
               {project.problem}
             </p>
           </div>
@@ -394,7 +421,7 @@ function CaseStudy({ project, onClose }: { project: Project; onClose: () => void
             <h4 className="mb-2 font-mono text-[0.64rem] font-medium uppercase tracking-[0.15em] text-primary">
               What I built
             </h4>
-            <ul className="grid max-w-[46rem] gap-2 pl-5 leading-relaxed text-muted-foreground [&_li]:list-disc [&_strong]:text-foreground">
+            <ul className="grid max-w-[46rem] gap-2 pl-5 text-[0.92rem] leading-relaxed text-muted-foreground sm:text-base [&_li]:list-disc [&_strong]:text-foreground">
               {project.built.map((b, i) => (
                 <li key={i} dangerouslySetInnerHTML={{ __html: b }} />
               ))}
@@ -406,13 +433,15 @@ function CaseStudy({ project, onClose }: { project: Project; onClose: () => void
               <h4 className="mb-2 font-mono text-[0.64rem] font-medium uppercase tracking-[0.15em] text-primary">
                 Architecture
               </h4>
-              <p className="leading-relaxed text-muted-foreground">{project.architecture}</p>
+              <p className="text-[0.92rem] leading-relaxed text-muted-foreground sm:text-base">
+                {project.architecture}
+              </p>
             </div>
             <div>
               <h4 className="mb-2 font-mono text-[0.64rem] font-medium uppercase tracking-[0.15em] text-primary">
                 Engineering decisions
               </h4>
-              <ul className="grid gap-2 pl-5 leading-relaxed text-muted-foreground [&_li]:list-disc [&_strong]:text-foreground">
+              <ul className="grid gap-2 pl-5 text-[0.92rem] leading-relaxed text-muted-foreground sm:text-base [&_li]:list-disc [&_strong]:text-foreground">
                 {project.decisions.map((d, i) => (
                   <li key={i} dangerouslySetInnerHTML={{ __html: d }} />
                 ))}
@@ -424,7 +453,7 @@ function CaseStudy({ project, onClose }: { project: Project; onClose: () => void
             <h4 className="mb-2 font-mono text-[0.64rem] font-medium uppercase tracking-[0.15em] text-primary">
               Outcome
             </h4>
-            <p className="max-w-[46rem] leading-relaxed text-muted-foreground">
+            <p className="max-w-[46rem] text-[0.92rem] leading-relaxed text-muted-foreground sm:text-base">
               {project.outcome}
             </p>
           </div>
@@ -436,13 +465,13 @@ function CaseStudy({ project, onClose }: { project: Project; onClose: () => void
             <Tags items={project.stack} />
           </div>
 
-          <div className="flex flex-wrap gap-3 border-t border-border pt-6">
+          <div className="flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:flex-wrap">
             {project.live && (
               <a
                 href={project.live}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5"
               >
                 Open live site
                 <ArrowUpRight className="size-4" />
@@ -452,7 +481,7 @@ function CaseStudy({ project, onClose }: { project: Project; onClose: () => void
               href={project.code}
               target="_blank"
               rel="noreferrer noopener"
-              className="inline-flex items-center gap-2 rounded-full border border-border px-5 py-3 text-sm font-semibold transition-all hover:border-primary hover:text-primary"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-border px-5 py-3 text-sm font-semibold transition-all hover:border-primary hover:text-primary"
             >
               <GithubIcon className="size-4" />
               View source
@@ -467,9 +496,9 @@ function CaseStudy({ project, onClose }: { project: Project; onClose: () => void
 function Card({ project, onOpen }: { project: Project; onOpen: (id: string) => void }) {
   const body = (
     <>
-      <Shot project={project} priority={project.featured} />
-      <div className="flex flex-col justify-center p-5 md:p-7">
-        <p className="mb-2 flex flex-wrap items-center gap-2 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted-foreground">
+      <Shot project={project} />
+      <div className="flex flex-col justify-center p-4 sm:p-5 md:p-7">
+        <p className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-muted-foreground sm:text-[0.62rem] sm:tracking-[0.14em]">
           {project.featured && (
             <>
               <b className="font-medium text-primary">Featured</b>
@@ -481,14 +510,16 @@ function Card({ project, onOpen }: { project: Project; onOpen: (id: string) => v
           <span>{project.year}</span>
         </p>
 
-        <h3 className="font-heading text-2xl font-bold tracking-tight md:text-3xl">
+        <h3 className="font-heading text-xl font-bold tracking-tight sm:text-2xl md:text-3xl">
           {project.name}
         </h3>
-        <p className="mt-2.5 leading-relaxed text-muted-foreground">{project.summary}</p>
+        <p className="mt-2.5 text-[0.92rem] leading-relaxed text-muted-foreground sm:text-base">
+          {project.summary}
+        </p>
 
         <Metrics
           items={project.metrics}
-          className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-border/60 pt-4 sm:grid-cols-4"
+          className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-border/60 pt-4 sm:grid-cols-4"
         />
 
         <Tags items={project.stack.slice(0, project.featured ? 10 : 6)} />
@@ -497,7 +528,7 @@ function Card({ project, onOpen }: { project: Project; onOpen: (id: string) => v
           <button
             type="button"
             onClick={() => onOpen(project.id)}
-            className="group/btn inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-[0.82rem] font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5"
+            className="group/btn inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-4 py-3 text-[0.82rem] font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5 sm:flex-none sm:py-2.5"
           >
             Read case study
             <ArrowRight className="size-3.5 transition-transform group-hover/btn:translate-x-0.5" />
@@ -507,7 +538,7 @@ function Card({ project, onOpen }: { project: Project; onOpen: (id: string) => v
               href={project.live}
               target="_blank"
               rel="noreferrer noopener"
-              className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2.5 text-[0.82rem] font-semibold transition-all hover:border-primary hover:text-primary"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-border px-4 py-3 text-[0.82rem] font-semibold transition-all hover:border-primary hover:text-primary sm:py-2.5"
             >
               Live site
             </a>
@@ -516,7 +547,7 @@ function Card({ project, onOpen }: { project: Project; onOpen: (id: string) => v
             href={project.code}
             target="_blank"
             rel="noreferrer noopener"
-            className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2.5 text-[0.82rem] font-semibold transition-all hover:border-primary hover:text-primary"
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-border px-4 py-3 text-[0.82rem] font-semibold transition-all hover:border-primary hover:text-primary sm:py-2.5"
           >
             Source
           </a>
@@ -527,7 +558,7 @@ function Card({ project, onOpen }: { project: Project; onOpen: (id: string) => v
 
   return (
     <article
-      className={`group/proj overflow-hidden rounded-3xl border border-border bg-card/85 backdrop-blur-md transition-colors hover:border-primary/45 ${
+      className={`group/proj overflow-hidden rounded-2xl border border-border bg-card/90 transition-colors hover:border-primary/45 sm:rounded-3xl md:bg-card/85 md:backdrop-blur-md ${
         project.featured ? 'lg:col-span-2' : ''
       }`}
     >
@@ -550,16 +581,16 @@ export function Projects() {
   const close = useCallback(() => setOpenId(null), [])
 
   return (
-    <section id="work" className="relative z-10 border-t border-border py-20 md:py-28">
-      <div className="mx-auto w-[min(72rem,calc(100%-2rem))] md:w-[min(72rem,calc(100%-4rem))]">
+    <section id="work" className="section-y relative z-10 border-t border-border">
+      <div className="shell">
         <Reveal as="header" className="mb-8 max-w-[46rem]">
           <p className="eyebrow mb-4">
             <span aria-hidden="true">01</span> Selected work
           </p>
-          <h2 className="text-balance font-heading text-3xl font-bold tracking-tight md:text-4xl">
+          <h2 className="text-balance font-heading text-[1.65rem] font-bold tracking-tight sm:text-3xl md:text-4xl">
             Five products. Every one of them clickable.
           </h2>
-          <p className="mt-4 leading-relaxed text-muted-foreground">
+          <p className="mt-4 text-[0.95rem] leading-relaxed text-muted-foreground sm:text-base">
             Not tutorial clones. Each runs with real APIs, real failure handling and measured
             performance. Open a case study to see the architecture and the trade-offs behind it.
           </p>
@@ -586,7 +617,7 @@ export function Projects() {
           ))}
         </div>
 
-        <p className="mt-8 font-mono text-xs tracking-wide text-muted-foreground">
+        <p className="mt-8 font-mono text-[0.7rem] tracking-wide text-muted-foreground sm:text-xs">
           More on{' '}
           <a
             href="https://github.com/theafzalhussain"

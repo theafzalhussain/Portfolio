@@ -14,9 +14,9 @@ const FACTS = [
 
 export function About() {
   return (
-    <section id="about" className="relative z-10 border-t border-border py-20 md:py-28">
-      <div className="mx-auto grid w-[min(72rem,calc(100%-2rem))] gap-12 md:w-[min(72rem,calc(100%-4rem))] lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:gap-16">
-        <Reveal className="relative max-w-[26rem]">
+    <section id="about" className="section-y relative z-10 border-t border-border">
+      <div className="shell grid gap-10 md:gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:gap-16">
+        <Reveal className="relative mx-auto w-full max-w-[24rem] sm:max-w-[26rem] lg:mx-0">
           {/* Education — sits above the portrait so it never covers the image.
               Matches the resume: MCA at IGNOU, BCA at MDU Rohtak. */}
           <div className="glass-strong mb-4 grid w-full gap-0.5 rounded-2xl px-4 py-3">
@@ -37,13 +37,16 @@ export function About() {
                   src="/images/afzalavatar.png"
                   alt="Portrait illustration of Afzal Hussain"
                   fill
-                  sizes="(min-width: 1024px) 26rem, 100vw"
+                  sizes="(min-width: 1024px) 26rem, (min-width: 640px) 26rem, 92vw"
+                  quality={85}
                   className="object-cover"
                 />
               </div>
-              <div className="flex items-baseline justify-between gap-2 px-2 pt-3.5 pb-1">
-                <strong className="font-heading text-xl font-semibold">Afzal Hussain</strong>
-                <span className="font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted-foreground">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1 px-2 pt-3.5 pb-1">
+                <strong className="font-heading text-lg font-semibold sm:text-xl">
+                  Afzal Hussain
+                </strong>
+                <span className="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-muted-foreground sm:text-[0.62rem] sm:tracking-[0.14em]">
                   New Delhi, India
                 </span>
               </div>
@@ -55,11 +58,11 @@ export function About() {
           <p className="eyebrow mb-4">
             <span aria-hidden="true">04</span> About
           </p>
-          <h2 className="text-balance font-heading text-3xl font-bold tracking-tight md:text-4xl">
+          <h2 className="text-balance font-heading text-[1.65rem] font-bold tracking-tight sm:text-3xl md:text-4xl">
             Self-taught discipline, production habits.
           </h2>
 
-          <div className="mt-5 grid max-w-[40rem] gap-4 leading-relaxed text-muted-foreground">
+          <div className="mt-5 grid max-w-[40rem] gap-4 text-[0.95rem] leading-relaxed text-muted-foreground sm:text-base">
             <p>
               I&apos;m a frontend developer based in New Delhi. I learn by shipping things that
               have to stay up — which is why my projects have cache layers, retry logic, worker
@@ -81,9 +84,9 @@ export function About() {
             </p>
           </div>
 
-          <dl className="mt-8 grid gap-px overflow-hidden rounded-2xl border border-border bg-border/40 sm:grid-cols-2">
+          <dl className="mt-8 grid gap-px overflow-hidden rounded-2xl border border-border bg-border/40 min-[400px]:grid-cols-2">
             {FACTS.map(([k, v]) => (
-              <div key={k} className="grid gap-0.5 bg-card/70 p-4 backdrop-blur-sm">
+              <div key={k} className="grid gap-0.5 bg-card/80 p-4 md:bg-card/70 md:backdrop-blur-sm">
                 <dt className="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-foreground">
                   {k}
                 </dt>
