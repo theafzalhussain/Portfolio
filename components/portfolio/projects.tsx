@@ -156,7 +156,7 @@ const PROJECTS: Project[] = [
     type: 'Typed full-stack data explorer',
     year: '2025',
     tags: ['fullstack', 'frontend'],
-    image: '/images/restcountry.png',
+    image: '/images/country.png',
     live: 'https://myrest-country.vercel.app',
     code: 'https://github.com/theafzalhussain/New-RestCountry',
     summary:
