@@ -20,41 +20,63 @@ interface Comet {
   len: number
 }
 
+/** Distant, fixed star. Only its brightness animates. */
+interface Star {
+  x: number
+  y: number
+  r: number
+  a: number
+  /** twinkle speed */
+  tw: number
+  /** twinkle phase offset */
+  ph: number
+  /** bright enough to earn a halo */
+  big: boolean
+}
+
 interface Palette {
   node: string
   link: string
   glow: string
+  star: string
   nodeA: number
   linkA: number
   glowA: number
+  starA: number
 }
 
 const DARK: Palette = {
   node: '120, 235, 225',
   link: '45, 212, 191',
   glow: '94, 234, 212',
+  star: '209, 250, 245',
   nodeA: 0.55,
   linkA: 0.16,
   glowA: 0.16,
+  starA: 0.7,
 }
 
 const LIGHT: Palette = {
   node: '13, 100, 100',
   link: '13, 148, 136',
   glow: '15, 118, 110',
+  star: '15, 118, 110',
   nodeA: 0.4,
   linkA: 0.1,
   glowA: 0.07,
+  starA: 0.3,
 }
 
 /**
- * Page-wide constellation field: drifting nodes, links between nearby pairs,
- * and a soft glow that lags behind the pointer.
+ * Page-wide constellation field: a twinkling star layer, drifting nodes,
+ * links between nearby pairs, and a soft glow that lags behind the pointer.
  *
  * Deliberately cheap, because a WebGL hero scene is already running:
  *  - throttled to ~40fps (the drift is slow; 60fps buys nothing)
  *  - node count scales with viewport area and is hard-capped, so a 4K display
  *    does not get a 600-node O(n^2) link loop
+ *  - stars are static: no position maths, just an alpha per frame, and only
+ *    the handful of bright ones pay for a gradient halo
  *  - pauses entirely on `visibilitychange`
  *  - draws once and freezes under `prefers-reduced-motion`
  */
@@ -79,11 +101,13 @@ export function Constellation() {
     let height = 0
     let link = 150
     let nodes: Node[] = []
+    let stars: Star[] = []
     let comets: Comet[] = []
     let nextComet = 2500 + Math.random() * 6000
     let running = true
     let raf = 0
     let last = 0
+    let time = 0
     const INTERVAL = 1000 / 40
 
     const ptr = { x: -9999, y: -9999, gx: -9999, gy: -9999, active: false }
@@ -97,6 +121,22 @@ export function Constellation() {
         vy: (Math.random() - 0.5) * 0.17,
         r: Math.random() * 1.15 + 0.7,
       }))
+
+      // Star layer sits behind the network: denser, smaller, and fixed, so it
+      // reads as deep space rather than more of the same drifting mesh.
+      const starCount = Math.max(70, Math.min(260, Math.round((width * height) / 6200)))
+      stars = Array.from({ length: starCount }, () => {
+        const big = Math.random() < 0.06
+        return {
+          x: Math.random() * width,
+          y: Math.random() * height,
+          r: big ? Math.random() * 0.9 + 1.2 : Math.random() * 0.65 + 0.35,
+          a: big ? Math.random() * 0.25 + 0.7 : Math.random() * 0.5 + 0.22,
+          tw: Math.random() * 1.6 + 0.5,
+          ph: Math.random() * Math.PI * 2,
+          big,
+        }
+      })
     }
 
     function resize() {
@@ -117,6 +157,29 @@ export function Constellation() {
       if (!ctx) return
       const P = paletteRef.current
       ctx.clearRect(0, 0, width, height)
+
+      // ── Star layer ───────────────────────────────────────────────
+      // Brightness is a squared sine, which spends most of its time dim and
+      // spikes briefly: that asymmetry is what makes a twinkle look real.
+      for (const s of stars) {
+        const osc = Math.sin(time * s.tw + s.ph)
+        const f = s.a * P.starA * (0.35 + 0.65 * osc * osc)
+
+        if (s.big) {
+          const g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r * 7)
+          g.addColorStop(0, `rgba(${P.star},${(f * 0.5).toFixed(3)})`)
+          g.addColorStop(1, `rgba(${P.star},0)`)
+          ctx.fillStyle = g
+          ctx.beginPath()
+          ctx.arc(s.x, s.y, s.r * 7, 0, Math.PI * 2)
+          ctx.fill()
+        }
+
+        ctx.fillStyle = `rgba(${P.star},${f.toFixed(3)})`
+        ctx.beginPath()
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2)
+        ctx.fill()
+      }
 
       ctx.lineWidth = 0.6
       for (let i = 0; i < nodes.length; i++) {
@@ -182,6 +245,8 @@ export function Constellation() {
     }
 
     function step() {
+      time += INTERVAL / 1000
+
       for (const n of nodes) {
         n.x += n.vx
         n.y += n.vy

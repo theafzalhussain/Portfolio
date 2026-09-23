@@ -16,12 +16,22 @@ This document explains the backend that was added to your contact form.
 **No changes were needed in `components/portfolio/contact.tsx`** — your form already posts `{ name, email, subject, message }` to `/api/contact`, which is exactly what the new backend expects.
 
 ### What happens on submit, step by step
-1. Same validation as before (name/email/message required, length limits).
+1. Same validation as before (name/email/message required, length limits), plus a honeypot field and a per-IP rate limit.
 2. The submission is saved as a document in MongoDB Atlas, in a `contacts` collection.
 3. Two emails are sent (in parallel):
    - **To you** (`ADMIN_EMAIL`) — subject, message, and the sender's email set as `Reply-To`, so you can hit reply directly.
    - **To the person who submitted the form** — a confirmation that you received their message.
-4. If saving to MongoDB fails, the request fails with an error (so you never silently lose a message). If only the *email* step fails, it's logged to the server console but the form still reports success to the user, since their message is already safely stored in the database — you'll still see it in Atlas.
+4. **Storage and delivery are independent.** If MongoDB is down or misconfigured, the emails still go out; if email breaks, the message is still stored in Atlas. The visitor is only shown an error when *both* fail — that is the only case where a message is genuinely lost. Every failure is logged to the server console with a `[contact]` prefix.
+
+### Quick config check (development only)
+
+With `npm run dev` running, open:
+
+```
+http://localhost:3000/api/contact
+```
+
+It returns which pieces are configured and whether Atlas is actually reachable — values are never included, only presence. This endpoint returns `404` in production.
 
 ---
 
@@ -69,11 +79,11 @@ Your normal Gmail password will **not** work with Nodemailer. You need an **App 
 
 Copy the example file:
 
-```bash
-cp .env.example .env.local
+```powershell
+Copy-Item .env.example .env.local
 ```
 
-Then open `.env.local` and fill in the real values:
+A pre-filled `.env.local` is already in the project root — just open it and fill in the blanks:
 
 ```bash
 MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/portfolio?retryWrites=true&w=majority
@@ -81,11 +91,13 @@ MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/portf
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=465
 EMAIL_USER=youraddress@gmail.com
-EMAIL_PASS=abcdefghijklmnop        # the 16-char App Password, no spaces
+EMAIL_PASS=abcdefghijklmnop        # the 16-char App Password (spaces are stripped for you)
 
-EMAIL_FROM="Afzal Hussain <youraddress@gmail.com>"
 ADMIN_EMAIL=theafzalhussain786@gmail.com
+# EMAIL_FROM="Afzal Hussain <youraddress@gmail.com>"   # optional override
 ```
+
+**Restart the dev server after editing this file** — Next.js reads env files at startup, so an edit made while the server is running may not be picked up.
 
 `.env.local` is already in `.gitignore` — it will never get committed.
 
@@ -117,3 +129,18 @@ Add the same variables from `.env.local` to your hosting provider's dashboard:
 ## Where to see stored submissions
 
 MongoDB Atlas → your cluster → **Browse Collections** → `portfolio` database → `contacts` collection. Each document has `name`, `email`, `subject`, `message`, `ip`, `userAgent`, and timestamps (`createdAt`, `updatedAt`).
+
+---
+
+## Troubleshooting
+
+| Symptom in the terminal | Cause & fix |
+|---|---|
+| `Missing MONGODB_URI environment variable` | `.env.local` has no value for it, or the dev server was started before you filled it in. Fill it, then restart the server. |
+| `MONGODB_URI still contains the <user>/<password> placeholders` | Replace them with the database user you created in Atlas **Database Access** (not your Atlas login). |
+| `Could not connect to any servers in your MongoDB Atlas cluster` / server selection timeout | Your IP isn't allow-listed. Atlas → **Network Access** → add `0.0.0.0/0`. |
+| `Authentication failed` from Atlas | Wrong database-user password, or a password with `@ : / ?` in it that needs URL-encoding (`@` → `%40`). |
+| `Email is not configured: EMAIL_USER, EMAIL_PASS missing` | Fill those in `.env.local` and restart. |
+| `Invalid login: 535-5.7.8 Username and Password not accepted` | You used your normal Gmail password. Create a 16-character **App Password** (step 3). |
+| `Connection timeout` on port 465 | Your network or ISP blocks SMTPS. Try `EMAIL_PORT=587`, or a provider like Brevo. |
+| Success toast, but no email arrives | Check spam. Then check the terminal — if it says the admin email failed, the message is still safe in Atlas. |

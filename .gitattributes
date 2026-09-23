@@ -1,0 +1,21 @@
+# Binary files must never go through line-ending conversion.
+#
+# This machine has core.autocrlf=true, and git classifies a file as text
+# unless it sees NUL bytes early on. A ReportLab-generated PDF can slip
+# past that check — git then "helpfully" rewrites LF to CRLF on checkout
+# and hands you a corrupted download. Declaring these explicitly is the
+# only reliable guard.
+
+*.pdf   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.ico   binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
+*.mp4   binary
+*.webm  binary

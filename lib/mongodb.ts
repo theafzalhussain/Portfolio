@@ -30,7 +30,7 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
     return cached.conn
   }
 
-  const MONGODB_URI = process.env.MONGODB_URI
+  const MONGODB_URI = process.env.MONGODB_URI?.trim()
 
   if (!MONGODB_URI) {
     throw new Error(
@@ -38,9 +38,28 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
     )
   }
 
+  // Catch the most common paste mistakes before burning 8 seconds on a
+  // connection attempt that cannot possibly succeed.
+  if (!/^mongodb(\+srv)?:\/\//.test(MONGODB_URI)) {
+    throw new Error(
+      'MONGODB_URI is malformed — it must start with "mongodb+srv://" (Atlas) or "mongodb://".',
+    )
+  }
+  if (MONGODB_URI.includes('<user>') || MONGODB_URI.includes('<password>')) {
+    throw new Error(
+      'MONGODB_URI still contains the <user>/<password> placeholders. Replace them with your real Atlas database user credentials.',
+    )
+  }
+
   if (!cached.promise) {
     cached.promise = mongoose.connect(MONGODB_URI, {
       bufferCommands: false,
+      // Default is 30s. A contact form request must not hang that long on a
+      // bad URI or an IP that isn't allow-listed in Atlas — fail fast so the
+      // email path still runs inside a sane request time.
+      serverSelectionTimeoutMS: 8000,
+      connectTimeoutMS: 8000,
+      socketTimeoutMS: 20000,
     })
   }
 

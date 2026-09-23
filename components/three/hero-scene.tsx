@@ -74,6 +74,10 @@ interface SceneColors {
   wire: string
   dust: string
   rim: string
+  /** Faceted gem clusters embedded in the crystal surface. */
+  shard: string
+  /** Hot centre of each gem — reads as a refraction highlight. */
+  flare: string
 }
 
 const DARK: SceneColors = {
@@ -82,6 +86,8 @@ const DARK: SceneColors = {
   wire: '#5eead4',
   dust: '#7fe8dd',
   rim: '#0f6f62',
+  shard: '#5eead4',
+  flare: '#ccfbf1',
 }
 
 // A metallic mint on a near-white page reflects straight to white and
@@ -92,40 +98,175 @@ const LIGHT: SceneColors = {
   wire: '#0b6355',
   dust: '#0f7a6a',
   rim: '#2f9b88',
+  shard: '#2f9b88',
+  flare: '#8fd8c9',
 }
 
 /* ─────────────────────────────────────────────
    Core + cage
    ───────────────────────────────────────────── */
 
-function Core({ colors, reduced }: { colors: SceneColors; reduced: boolean }) {
-  const mesh = useRef<THREE.Mesh>(null)
+/** Gem clusters sitting in the crystal surface, mostly on the lit side. */
+const SHARDS = [
+  { dir: [0.42, 0.62, 0.66], size: 0.3, phase: 0.0, kind: 'ico' as const },
+  { dir: [-0.56, 0.16, 0.81], size: 0.26, phase: 1.7, kind: 'oct' as const },
+  { dir: [-0.24, -0.44, 0.86], size: 0.22, phase: 3.1, kind: 'ico' as const },
+  { dir: [0.78, -0.12, 0.61], size: 0.19, phase: 4.4, kind: 'oct' as const },
+  { dir: [0.06, 0.88, 0.47], size: 0.16, phase: 5.6, kind: 'ico' as const },
+  { dir: [-0.82, 0.5, 0.26], size: 0.14, phase: 2.4, kind: 'oct' as const },
+]
+
+const CORE_R = 2.05
+
+function CrystalShards({ colors, reduced }: { colors: SceneColors; reduced: boolean }) {
+  const gems = useRef<(THREE.Mesh | null)[]>([])
+  const halos = useRef<(THREE.Mesh | null)[]>([])
+  const elapsed = useRef(0)
+
+  const placed = useMemo(
+    () =>
+      SHARDS.map((s) => {
+        const v = new THREE.Vector3(...s.dir).normalize()
+        return {
+          ...s,
+          // Seated just under the surface so the facets break through the
+          // shell rather than hovering above it.
+          pos: v.clone().multiplyScalar(CORE_R - s.size * 0.42),
+          // Point one facet outward, like a crystal growing from the body.
+          quat: new THREE.Quaternion().setFromUnitVectors(
+            new THREE.Vector3(0, 1, 0),
+            v,
+          ),
+        }
+      }),
+    [],
+  )
 
   useFrame((_, delta) => {
-    if (reduced || !mesh.current) return
-    mesh.current.rotation.y += delta * 0.16
-    mesh.current.rotation.x += delta * 0.05
+    if (reduced) return
+    elapsed.current += delta
+    const t = elapsed.current
+    for (let i = 0; i < placed.length; i++) {
+      const gem = gems.current[i]
+      const halo = halos.current[i]
+      // Slow breathing glow, each gem on its own phase, so the surface
+      // never reads as a flat colour.
+      const pulse = 0.55 + 0.45 * Math.sin(t * 0.7 + placed[i].phase)
+      if (gem) {
+        const mat = gem.material as THREE.MeshStandardMaterial
+        mat.emissiveIntensity = 1.5 + pulse * 2.4
+        gem.rotation.y = t * 0.24 + placed[i].phase
+      }
+      if (halo) {
+        const mat = halo.material as THREE.MeshBasicMaterial
+        mat.opacity = 0.06 + pulse * 0.16
+        halo.scale.setScalar(1 + pulse * 0.28)
+      }
+    }
+  })
+
+  return (
+    <>
+      {placed.map((s, i) => (
+        <group key={i} position={s.pos} quaternion={s.quat}>
+          <mesh
+            ref={(el) => {
+              gems.current[i] = el
+            }}
+          >
+            {s.kind === 'ico' ? (
+              <icosahedronGeometry args={[s.size, 0]} />
+            ) : (
+              <octahedronGeometry args={[s.size, 0]} />
+            )}
+            <meshStandardMaterial
+              color={colors.flare}
+              emissive={colors.shard}
+              emissiveIntensity={2.2}
+              roughness={0.05}
+              metalness={0.1}
+              flatShading
+            />
+          </mesh>
+
+          {/* Additive bloom so the gem bleeds light into the body, which is
+              what sells it as refraction rather than a stuck-on rock. */}
+          <mesh
+            ref={(el) => {
+              halos.current[i] = el
+            }}
+            scale={1}
+          >
+            <sphereGeometry args={[s.size * 2.6, 16, 16]} />
+            <meshBasicMaterial
+              color={colors.flare}
+              transparent
+              opacity={0.14}
+              blending={THREE.AdditiveBlending}
+              depthWrite={false}
+            />
+          </mesh>
+        </group>
+      ))}
+    </>
+  )
+}
+
+function Core({ colors, reduced }: { colors: SceneColors; reduced: boolean }) {
+  const shell = useRef<THREE.Group>(null)
+
+  useFrame((_, delta) => {
+    if (reduced || !shell.current) return
+    shell.current.rotation.y += delta * 0.16
+    shell.current.rotation.x += delta * 0.05
   })
 
   return (
     <group>
-      <mesh ref={mesh}>
-        <icosahedronGeometry args={[2.05, 24]} />
-        <MeshDistortMaterial
-          color={colors.core}
-          emissive={colors.emissive}
-          emissiveIntensity={0.35}
-          roughness={0.24}
-          metalness={0.9}
-          distort={reduced ? 0 : 0.28}
-          speed={1.1}
-        />
-      </mesh>
+      {/* Body + gems share one transform so the facets stay welded to the
+          surface as the crystal turns. */}
+      <group ref={shell}>
+        <mesh>
+          <icosahedronGeometry args={[CORE_R, 6]} />
+          <MeshDistortMaterial
+            color={colors.core}
+            emissive={colors.emissive}
+            emissiveIntensity={0.38}
+            roughness={0.12}
+            metalness={0.55}
+            // Flat shading turns the subdivided icosahedron into thousands of
+            // discrete planes: each one takes the light at its own angle, so
+            // the body reads as cut crystal instead of a smooth blob.
+            flatShading
+            clearcoat={1}
+            clearcoatRoughness={0.16}
+            iridescence={0.55}
+            iridescenceIOR={1.4}
+            distort={reduced ? 0 : 0.24}
+            speed={1.1}
+          />
+        </mesh>
+
+        {/* Faint facet net over the body — the polygon seams you can just
+            make out on a real cut stone. */}
+        <mesh scale={1.012}>
+          <icosahedronGeometry args={[CORE_R, 2]} />
+          <meshBasicMaterial
+            color={colors.flare}
+            wireframe
+            transparent
+            opacity={0.07}
+            depthWrite={false}
+          />
+        </mesh>
+
+        <CrystalShards colors={colors} reduced={reduced} />
+      </group>
 
       {/* Atmosphere shell: back-faces only, additive, so it reads as a rim
           glow around the orb instead of a second visible sphere. */}
       <mesh scale={1.16}>
-        <sphereGeometry args={[2.05, 48, 48]} />
+        <sphereGeometry args={[CORE_R, 48, 48]} />
         <meshBasicMaterial
           color={colors.wire}
           transparent
@@ -140,19 +281,40 @@ function Core({ colors, reduced }: { colors: SceneColors; reduced: boolean }) {
 }
 
 function Cage({ colors, reduced }: { colors: SceneColors; reduced: boolean }) {
-  const mesh = useRef<THREE.Mesh>(null)
+  const outer = useRef<THREE.Mesh>(null)
+  const inner = useRef<THREE.Mesh>(null)
 
   useFrame((_, delta) => {
-    if (reduced || !mesh.current) return
-    mesh.current.rotation.y -= delta * 0.1
-    mesh.current.rotation.z += delta * 0.05
+    if (reduced) return
+    if (outer.current) {
+      outer.current.rotation.y -= delta * 0.1
+      outer.current.rotation.z += delta * 0.05
+    }
+    // Counter-rotating second shell: the two wireframes slide across each
+    // other and read as a lattice with depth, not a single flat net.
+    if (inner.current) {
+      inner.current.rotation.y += delta * 0.07
+      inner.current.rotation.x -= delta * 0.035
+    }
   })
 
   return (
-    <mesh ref={mesh}>
-      <icosahedronGeometry args={[3.15, 1]} />
-      <meshBasicMaterial color={colors.wire} wireframe transparent opacity={0.26} />
-    </mesh>
+    <>
+      <mesh ref={outer}>
+        <icosahedronGeometry args={[3.15, 1]} />
+        <meshBasicMaterial color={colors.wire} wireframe transparent opacity={0.26} />
+      </mesh>
+      <mesh ref={inner}>
+        <icosahedronGeometry args={[2.62, 2]} />
+        <meshBasicMaterial
+          color={colors.wire}
+          wireframe
+          transparent
+          opacity={0.09}
+          depthWrite={false}
+        />
+      </mesh>
+    </>
   )
 }
 
@@ -210,7 +372,14 @@ function Satellites({ colors, reduced }: { colors: SceneColors; reduced: boolean
           }}
         >
           <octahedronGeometry args={[0.1, 0]} />
-          <meshStandardMaterial color={colors.dust} roughness={0.3} metalness={0.8} />
+          <meshStandardMaterial
+            color={colors.flare}
+            emissive={colors.shard}
+            emissiveIntensity={0.9}
+            roughness={0.08}
+            metalness={0.3}
+            flatShading
+          />
         </mesh>
       ))}
     </>
@@ -226,7 +395,7 @@ function Satellites({ colors, reduced }: { colors: SceneColors; reduced: boolean
    is moved to the resulting screen coordinate.
    ───────────────────────────────────────────── */
 
-const CORE_RADIUS = 2.05
+const CORE_RADIUS = CORE_R
 
 function LabelProjector({
   nodes,

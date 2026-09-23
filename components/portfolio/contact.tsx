@@ -78,8 +78,18 @@ export function Contact() {
       const body = await res.json().catch(() => ({}))
 
       if (!res.ok) {
-        toast.error(body?.error ?? 'Something went wrong. Please try again.')
+        toast.error(body?.error ?? 'Something went wrong. Please try again.', { duration: 6000 })
+        // Dev-only cause, logged as a warning on purpose: console.error trips
+        // the Next.js dev error overlay, and a config problem the terminal
+        // already explains in full doesn't deserve a full-screen modal.
+        if (body?.detail) console.warn('[contact] server detail:', body.detail)
         return
+      }
+
+      // Stored but the notification email did not go out: the message is not
+      // lost, so don't alarm the visitor — just flag it for the developer.
+      if (body?.adminEmailSent === false) {
+        console.warn('[contact] Saved, but the notification email failed to send.')
       }
 
       toast.success('Message received — I usually reply within a day.')

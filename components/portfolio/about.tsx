@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { Download, GraduationCap } from 'lucide-react'
+import { GraduationCap } from 'lucide-react'
 import { Reveal } from '@/components/ui/reveal'
 import { TiltCard } from '@/components/ui/tilt-card'
 
@@ -17,6 +17,19 @@ export function About() {
     <section id="about" className="relative z-10 border-t border-border py-20 md:py-28">
       <div className="mx-auto grid w-[min(72rem,calc(100%-2rem))] gap-12 md:w-[min(72rem,calc(100%-4rem))] lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:gap-16">
         <Reveal className="relative max-w-[26rem]">
+          {/* Education — sits above the portrait so it never covers the image.
+              Matches the resume: MCA at IGNOU, BCA at MDU Rohtak. */}
+          <div className="glass-strong mb-4 grid w-full gap-0.5 rounded-2xl px-4 py-3">
+            <span className="flex items-center gap-2 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-foreground">
+              <GraduationCap className="size-3.5 text-primary" aria-hidden="true" />
+              Currently
+            </span>
+            <strong className="text-[0.95rem] font-semibold">MCA · IGNOU</strong>
+            <span className="text-[0.78rem] text-muted-foreground">
+              BCA · First Division, MDU Rohtak
+            </span>
+          </div>
+
           <TiltCard max={7}>
             <div className="glass-strong rounded-3xl p-2.5 shadow-[0_0_80px_-28px_var(--glow)]">
               <div className="relative aspect-square overflow-hidden rounded-2xl">
@@ -36,18 +49,6 @@ export function About() {
               </div>
             </div>
           </TiltCard>
-
-          {/* Education badge — matches the resume: MCA at IGNOU, BCA at MDU Rohtak. */}
-          <div className="glass-strong ml-auto -mt-5 grid w-max max-w-full gap-0.5 rounded-2xl px-4 py-3">
-            <span className="flex items-center gap-2 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-muted-foreground">
-              <GraduationCap className="size-3.5 text-primary" aria-hidden="true" />
-              Currently
-            </span>
-            <strong className="text-[0.95rem] font-semibold">MCA · IGNOU</strong>
-            <span className="text-[0.78rem] text-muted-foreground">
-              BCA · First Division, MDU Rohtak
-            </span>
-          </div>
         </Reveal>
 
         <Reveal delay={100}>
@@ -90,15 +91,6 @@ export function About() {
               </div>
             ))}
           </dl>
-
-          <a
-            href="/resume.pdf"
-            download
-            className="mt-6 inline-flex items-center gap-2 rounded-full border border-border px-5 py-3 text-sm font-semibold transition-all hover:-translate-y-0.5 hover:border-primary hover:text-primary"
-          >
-            <Download className="size-4" />
-            Download resume
-          </a>
         </Reveal>
       </div>
     </section>
