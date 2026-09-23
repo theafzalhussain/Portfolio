@@ -524,21 +524,21 @@ function Card({ project, onOpen }: { project: Project; onOpen: (id: string) => v
 
         <Tags items={project.stack.slice(0, project.featured ? 10 : 6)} />
 
-        <div className="mt-5 flex flex-wrap gap-2.5">
+        <div className="mt-5 grid grid-cols-2 gap-2.5 sm:flex sm:flex-wrap">
           <button
             type="button"
             onClick={() => onOpen(project.id)}
-            className="group/btn inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-4 py-3 text-[0.82rem] font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5 sm:flex-none sm:py-2.5"
+            className="group/btn col-span-2 inline-flex min-w-0 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-primary px-4 py-3 text-[0.82rem] font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5 sm:col-span-1 sm:flex-none sm:py-2.5"
           >
             Read case study
-            <ArrowRight className="size-3.5 transition-transform group-hover/btn:translate-x-0.5" />
+            <ArrowRight className="size-3.5 shrink-0 transition-transform group-hover/btn:translate-x-0.5" />
           </button>
           {project.live && (
             <a
               href={project.live}
               target="_blank"
               rel="noreferrer noopener"
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-border px-4 py-3 text-[0.82rem] font-semibold transition-all hover:border-primary hover:text-primary sm:py-2.5"
+              className="inline-flex min-w-0 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-border px-4 py-3 text-[0.82rem] font-semibold transition-all hover:border-primary hover:text-primary sm:py-2.5"
             >
               Live site
             </a>
@@ -547,7 +547,7 @@ function Card({ project, onOpen }: { project: Project; onOpen: (id: string) => v
             href={project.code}
             target="_blank"
             rel="noreferrer noopener"
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-border px-4 py-3 text-[0.82rem] font-semibold transition-all hover:border-primary hover:text-primary sm:py-2.5"
+            className="inline-flex min-w-0 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-border px-4 py-3 text-[0.82rem] font-semibold transition-all hover:border-primary hover:text-primary sm:py-2.5"
           >
             Source
           </a>
