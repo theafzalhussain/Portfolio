@@ -79,7 +79,7 @@ const PROJECTS: Project[] = [
     type: 'Installable PWA · performance',
     year: '2026',
     tags: ['pwa', 'frontend', 'backend'],
-    image: '/images/moviezone1.png',
+    image: '/images/moviezone2.png',
     live: 'https://moviezone.dev',
     code: 'https://github.com/theafzalhussain/Moviezonne',
     summary:
